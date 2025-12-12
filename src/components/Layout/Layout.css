@@ -1,0 +1,28 @@
+/* Swiss Style Layout */
+.layout {
+  display: flex;
+  min-height: 100vh;
+  background: #fafafa;
+}
+
+.main-content {
+  flex: 1;
+  margin-left: 220px;
+}
+
+.content-area {
+  margin-top: 56px;
+  padding: 20px;
+  min-height: calc(100vh - 56px);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .main-content {
+    margin-left: 200px;
+  }
+
+  .content-area {
+    padding: 16px;
+  }
+}
