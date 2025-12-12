@@ -1,20 +1,21 @@
 import { useState } from 'react';
-import { Upload, Search, Trash2, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Upload, Search, Trash2, ChevronLeft, ChevronRight, Copy, Check } from 'lucide-react';
 import './Media.css';
 
 const Media = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [searchTerm, setSearchTerm] = useState('');
-  const itemsPerPage = 12;
+  const [copiedId, setCopiedId] = useState(null);
+  const itemsPerPage = 24;
 
-  // Sample images data
+  // Sample images data - reversed to show latest first
   const allImages = Array.from({ length: 45 }, (_, i) => ({
     id: i + 1,
     url: `https://via.placeholder.com/300x300?text=Image+${i + 1}`,
     name: `image-${i + 1}.jpg`,
     size: '245 KB',
     date: '2024-12-12'
-  }));
+  })).reverse(); // Latest images first
 
   const filteredImages = allImages.filter(img => 
     img.name.toLowerCase().includes(searchTerm.toLowerCase())
@@ -28,6 +29,13 @@ const Media = () => {
     if (page >= 1 && page <= totalPages) {
       setCurrentPage(page);
     }
+  };
+
+  const copyImageLink = (url, id) => {
+    navigator.clipboard.writeText(url).then(() => {
+      setCopiedId(id);
+      setTimeout(() => setCopiedId(null), 2000);
+    });
   };
 
   return (
@@ -68,7 +76,14 @@ const Media = () => {
             <div className="media-image-wrapper">
               <img src={image.url} alt={image.name} className="media-image" />
               <div className="media-overlay">
-                <button className="btn-delete-media">
+                <button 
+                  className="btn-action-media"
+                  onClick={() => copyImageLink(image.url, image.id)}
+                  title="Copy image link"
+                >
+                  {copiedId === image.id ? <Check size={16} /> : <Copy size={16} />}
+                </button>
+                <button className="btn-action-media btn-delete">
                   <Trash2 size={16} />
                 </button>
               </div>

@@ -1,6 +1,6 @@
 /* Swiss Style Media Library */
 .media-page {
-  max-width: 1200px;
+  width: 100%;
 }
 
 .media-toolbar {
@@ -110,6 +110,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
+  gap: 8px;
   opacity: 0;
   transition: opacity 0.2s;
 }
@@ -118,7 +119,7 @@
   opacity: 1;
 }
 
-.btn-delete-media {
+.btn-action-media {
   background: white;
   border: none;
   width: 32px;
@@ -128,11 +129,17 @@
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  color: #ef4444;
+  color: #333;
   transition: all 0.2s;
 }
 
-.btn-delete-media:hover {
+.btn-action-media:hover {
+  background: linear-gradient(218.44deg, #FD8CBB 4.36%, #DC5F92 86.2%);
+  color: white;
+  transform: scale(1.1);
+}
+
+.btn-action-media.btn-delete:hover {
   background: #ef4444;
   color: white;
   transform: scale(1.1);
