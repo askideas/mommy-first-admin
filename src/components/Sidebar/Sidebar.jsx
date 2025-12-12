@@ -1,4 +1,4 @@
-import { Home, Image, Grid, Tag, Settings, FileImage } from 'lucide-react';
+import { Home, FileImage } from 'lucide-react';
 import { Link, useLocation } from 'react-router-dom';
 import './Sidebar.css';
 
@@ -7,12 +7,7 @@ const Sidebar = () => {
 
   const menuItems = [
     { icon: Home, label: 'HomePage', path: '/' },
-    { icon: Image, label: 'Hero Section', path: '/hero' },
-    { icon: Grid, label: 'Products', path: '/products' },
-    { icon: Tag, label: 'Categories', path: '/categories' },
-    { icon: Image, label: 'Banners', path: '/banners' },
-    { icon: FileImage, label: 'Media', path: '/media' },
-    { icon: Settings, label: 'Settings', path: '/settings' }
+    { icon: FileImage, label: 'Media', path: '/media' }
   ];
 
   return (
