@@ -1,9 +1,9 @@
 import { useState } from 'react';
-import { ChevronDown, Plus, Edit, Trash2 } from 'lucide-react';
+import { Plus, Edit, Trash2 } from 'lucide-react';
 import './HomePage.css';
 
 const HomePage = () => {
-  const [openSection, setOpenSection] = useState(null);
+  const [activeTab, setActiveTab] = useState('hero');
 
   const sections = [
     {
@@ -55,9 +55,7 @@ const HomePage = () => {
     }
   ];
 
-  const toggleSection = (sectionId) => {
-    setOpenSection(openSection === sectionId ? null : sectionId);
-  };
+  const activeSection = sections.find(s => s.id === activeTab);
 
   return (
     <div className="homepage-page">
@@ -68,51 +66,49 @@ const HomePage = () => {
         </div>
       </div>
 
-      <div className="accordion">
-        {sections.map((section) => (
-          <div key={section.id} className="accordion-item">
-            <div 
-              className="accordion-header"
-              onClick={() => toggleSection(section.id)}
+      <div className="tabs-container">
+        <div className="tabs-nav">
+          {sections.map((section) => (
+            <button
+              key={section.id}
+              className={`tab-button ${activeTab === section.id ? 'active' : ''}`}
+              onClick={() => setActiveTab(section.id)}
             >
-              <h3 className="accordion-title">{section.title}</h3>
-              <ChevronDown 
-                size={18} 
-                className={`accordion-icon ${openSection === section.id ? 'open' : ''}`}
-              />
-            </div>
-            
-            {openSection === section.id && (
-              <div className="accordion-content">
-                <button className="btn-add-item">
-                  <Plus size={16} />
-                  Add Item
-                </button>
-                
-                <div className="items-list">
-                  {section.items.map((item) => (
-                    <div key={item.id} className="item-row">
-                      <div className="item-info">
-                        <span className="item-name">{item.name}</span>
-                        <span className={`item-status ${item.status.toLowerCase()}`}>
-                          {item.status}
-                        </span>
-                      </div>
-                      <div className="item-actions">
-                        <button className="btn-icon-sm">
-                          <Edit size={14} />
-                        </button>
-                        <button className="btn-icon-sm btn-danger">
-                          <Trash2 size={14} />
-                        </button>
-                      </div>
-                    </div>
-                  ))}
+              {section.title}
+            </button>
+          ))}
+        </div>
+
+        <div className="tab-content">
+          <div className="tab-content-header">
+            <h3 className="section-title">{activeSection.title}</h3>
+            <button className="btn-add-item">
+              <Plus size={16} />
+              Add Item
+            </button>
+          </div>
+
+          <div className="items-list">
+            {activeSection.items.map((item) => (
+              <div key={item.id} className="item-row">
+                <div className="item-info">
+                  <span className="item-name">{item.name}</span>
+                  <span className={`item-status ${item.status.toLowerCase()}`}>
+                    {item.status}
+                  </span>
+                </div>
+                <div className="item-actions">
+                  <button className="btn-icon-sm">
+                    <Edit size={14} />
+                  </button>
+                  <button className="btn-icon-sm btn-danger">
+                    <Trash2 size={14} />
+                  </button>
                 </div>
               </div>
-            )}
+            ))}
           </div>
-        ))}
+        </div>
       </div>
     </div>
   );
