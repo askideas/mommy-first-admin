@@ -1,4 +1,4 @@
-import { Home, FileImage } from 'lucide-react';
+import { Home, FileImage, ShoppingBag } from 'lucide-react';
 import { Link, useLocation } from 'react-router-dom';
 import './Sidebar.css';
 
@@ -7,7 +7,8 @@ const Sidebar = () => {
 
   const menuItems = [
     { icon: Home, label: 'HomePage', path: '/' },
-    { icon: FileImage, label: 'Media', path: '/media' }
+    { icon: ShoppingBag, label: 'Shop Page', path: '/shop' },
+    { icon: FileImage, label: 'Media', path: '/media' },
   ];
 
   return (
