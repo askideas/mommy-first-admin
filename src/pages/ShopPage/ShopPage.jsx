@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Upload, Save, Plus, Edit2, Trash2, X } from 'lucide-react';
+import { Upload, Save, Plus, Edit, Trash2, X } from 'lucide-react';
 import './ShopPage.css';
 
 const ShopPage = () => {
@@ -241,18 +241,18 @@ const ShopPage = () => {
                       </div>
                       <div className="espot-actions">
                         <button
-                          className="edit-button"
+                          className="btn-icon-sm"
                           onClick={() => handleEditEspot(index)}
                           title="Edit"
                         >
-                          <Edit2 size={16} />
+                          <Edit size={14} />
                         </button>
                         <button
-                          className="delete-button"
+                          className="btn-icon-sm btn-danger"
                           onClick={() => handleDeleteEspot(index)}
                           title="Delete"
                         >
-                          <Trash2 size={16} />
+                          <Trash2 size={14} />
                         </button>
                       </div>
                     </div>
