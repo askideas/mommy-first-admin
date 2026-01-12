@@ -2,6 +2,9 @@ import { useState } from 'react';
 import './HomePage.css';
 import HeroSection from './components/HeroSection';
 import RecommendedBundles from './components/RecommendedBundles';
+import NewArrivals from './components/NewArrivals';
+import ShopByCategory from './components/ShopByCategory';
+import SeeHowItWorks from './components/SeeHowItWorks';
 
 const HomePage = () => {
   const [selectedSection, setSelectedSection] = useState('hero');
@@ -28,6 +31,12 @@ const HomePage = () => {
         return <HeroSection />;
       case 'recommended-bundles':
         return <RecommendedBundles />;
+      case 'new-arrivals':
+        return <NewArrivals />;
+      case 'shop-by-category':
+        return <ShopByCategory />;
+      case 'how-it-works':
+        return <SeeHowItWorks />;
       default:
         return (
           <div className="section-content-empty">
