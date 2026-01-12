@@ -1,61 +1,39 @@
 import { useState } from 'react';
-import { Plus, Edit, Trash2 } from 'lucide-react';
 import './HomePage.css';
+import HeroSection from './components/HeroSection';
 
 const HomePage = () => {
-  const [activeTab, setActiveTab] = useState('hero');
+  const [selectedSection, setSelectedSection] = useState('hero');
 
   const sections = [
-    {
-      id: 'hero',
-      title: 'Hero Section',
-      items: [
-        { id: 1, name: 'Main Hero Banner', status: 'Active' },
-        { id: 2, name: 'Secondary Banner', status: 'Inactive' }
-      ]
-    },
-    {
-      id: 'featured',
-      title: 'Featured Products',
-      items: [
-        { id: 1, name: 'Summer Collection', status: 'Active' },
-        { id: 2, name: 'New Arrivals', status: 'Active' }
-      ]
-    },
-    {
-      id: 'categories',
-      title: 'Category Section',
-      items: [
-        { id: 1, name: 'Women Fashion', status: 'Active' },
-        { id: 2, name: 'Accessories', status: 'Active' },
-        { id: 3, name: 'Jewelry', status: 'Active' }
-      ]
-    },
-    {
-      id: 'promotions',
-      title: 'Promotional Banners',
-      items: [
-        { id: 1, name: 'Sale Banner', status: 'Active' },
-        { id: 2, name: 'Newsletter Banner', status: 'Inactive' }
-      ]
-    },
-    {
-      id: 'testimonials',
-      title: 'Testimonials',
-      items: [
-        { id: 1, name: 'Customer Reviews', status: 'Active' }
-      ]
-    },
-    {
-      id: 'newsletter',
-      title: 'Newsletter Section',
-      items: [
-        { id: 1, name: 'Subscribe Form', status: 'Active' }
-      ]
-    }
+    { id: 'hero', name: 'Hero Section' },
+    { id: 'text', name: 'Text Section' },
+    { id: 'recommended-bundles', name: 'Recommended Bundles' },
+    { id: 'new-arrivals', name: 'New Arrivals' },
+    { id: 'shop-by-category', name: 'Shop by Category' },
+    { id: 'moms-trust', name: 'Moms Trust' },
+    { id: 'how-it-works', name: 'See How It Works' },
+    { id: 'reviews', name: 'Reviews' },
+    { id: 'events', name: 'Events' },
+    { id: 'free-guide', name: 'Free Guide' },
+    { id: 'blogs', name: 'Blogs' }
   ];
 
-  const activeSection = sections.find(s => s.id === activeTab);
+  const renderSectionContent = () => {
+    const section = sections.find(s => s.id === selectedSection);
+    
+    switch (selectedSection) {
+      case 'hero':
+        return <HeroSection />;
+      default:
+        return (
+          <div className="section-content-empty">
+            <h2>{section?.name}</h2>
+            <p>Content for {section?.name} will be added here</p>
+          </div>
+        );
+    }
+  };
 
   return (
     <div className="homepage-page">
@@ -66,48 +44,26 @@ const HomePage = () => {
         </div>
       </div>
 
-      <div className="tabs-container">
-        <div className="tabs-nav">
-          {sections.map((section) => (
-            <button
-              key={section.id}
-              className={`tab-button ${activeTab === section.id ? 'active' : ''}`}
-              onClick={() => setActiveTab(section.id)}
-            >
-              {section.title}
-            </button>
-          ))}
-        </div>
-
-        <div className="tab-content">
-          <div className="tab-content-header">
-            <h3 className="section-title">{activeSection.title}</h3>
-            <button className="btn-add-item">
-              <Plus size={16} />
-              Add Item
-            </button>
-          </div>
-
-          <div className="items-list">
-            {activeSection.items.map((item) => (
-              <div key={item.id} className="item-row">
-                <div className="item-info">
-                  <span className="item-name">{item.name}</span>
-                  <span className={`item-status ${item.status.toLowerCase()}`}>
-                    {item.status}
-                  </span>
-                </div>
-                <div className="item-actions">
-                  <button className="btn-icon-sm">
-                    <Edit size={14} />
-                  </button>
-                  <button className="btn-icon-sm btn-danger">
-                    <Trash2 size={14} />
-                  </button>
-                </div>
-              </div>
+      <div className="homepage-layout">
+        {/* Left Column - Sections List */}
+        <div className="sections-sidebar">
+          <h3 className="sidebar-title">Sections</h3>
+          <div className="sections-list">
+            {sections.map((section) => (
+              <button
+                key={section.id}
+                className={`section-item ${selectedSection === section.id ? 'active' : ''}`}
+                onClick={() => setSelectedSection(section.id)}
+              >
+                {section.name}
+              </button>
             ))}
           </div>
+        </div>
+
+        {/* Right Column - Section Content */}
+        <div className="section-content">
+          {renderSectionContent()}
         </div>
       </div>
     </div>
