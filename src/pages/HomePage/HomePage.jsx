@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import './HomePage.css';
 import HeroSection from './components/HeroSection';
+import RecommendedBundles from './components/RecommendedBundles';
 
 const HomePage = () => {
   const [selectedSection, setSelectedSection] = useState('hero');
@@ -25,6 +26,8 @@ const HomePage = () => {
     switch (selectedSection) {
       case 'hero':
         return <HeroSection />;
+      case 'recommended-bundles':
+        return <RecommendedBundles />;
       default:
         return (
           <div className="section-content-empty">
