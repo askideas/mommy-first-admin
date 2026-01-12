@@ -5,6 +5,8 @@ import RecommendedBundles from './components/RecommendedBundles';
 import NewArrivals from './components/NewArrivals';
 import ShopByCategory from './components/ShopByCategory';
 import SeeHowItWorks from './components/SeeHowItWorks';
+import Reviews from './components/Reviews';
+import FreeGuide from './components/FreeGuide';
 
 const HomePage = () => {
   const [selectedSection, setSelectedSection] = useState('hero');
@@ -37,6 +39,10 @@ const HomePage = () => {
         return <ShopByCategory />;
       case 'how-it-works':
         return <SeeHowItWorks />;
+      case 'reviews':
+        return <Reviews />;
+      case 'free-guide':
+        return <FreeGuide />;
       default:
         return (
           <div className="section-content-empty">

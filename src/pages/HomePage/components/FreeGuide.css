@@ -1,0 +1,123 @@
+/* Free Guide Configuration Styles */
+.free-guide-container {
+  width: 100%;
+}
+
+.section-main-title {
+  font-size: 20px;
+  font-weight: 700;
+  color: #1a1a1a;
+  margin: 0 0 24px 0;
+  letter-spacing: -0.4px;
+}
+
+/* Config Section */
+.config-section {
+  background: white;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.section-content-area {
+  padding: 24px;
+}
+
+/* Form Elements */
+.form-group {
+  margin-bottom: 20px;
+}
+
+.form-group:last-child {
+  margin-bottom: 0;
+}
+
+.form-label {
+  display: block;
+  font-size: 13px;
+  font-weight: 600;
+  color: #333;
+  margin-bottom: 8px;
+  letter-spacing: -0.1px;
+}
+
+.form-input,
+.form-textarea {
+  width: 100%;
+  padding: 10px 14px;
+  font-size: 13px;
+  color: #1a1a1a;
+  background: white;
+  border: 1px solid #e0e0e0;
+  border-radius: 6px;
+  transition: all 0.2s;
+  font-family: inherit;
+}
+
+.form-input:focus,
+.form-textarea:focus {
+  outline: none;
+  border-color: #DC5F92;
+  box-shadow: 0 0 0 3px rgba(220, 95, 146, 0.1);
+}
+
+.form-textarea {
+  resize: vertical;
+  min-height: 100px;
+}
+
+/* Section Actions */
+.section-actions {
+  margin-top: 24px;
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  padding-top: 16px;
+  border-top: 1px solid #e0e0e0;
+}
+
+.btn-cancel {
+  background: white;
+  color: #666;
+  border: 1px solid #e0e0e0;
+  padding: 10px 24px;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-cancel:hover {
+  background: #f5f5f5;
+  border-color: #999;
+  color: #333;
+}
+
+.btn-save {
+  background: linear-gradient(218.44deg, #FD8CBB 4.36%, #DC5F92 86.2%);
+  color: white;
+  border: none;
+  padding: 10px 24px;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-save:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(220, 95, 146, 0.3);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .section-main-title {
+    font-size: 18px;
+  }
+
+  .section-content-area {
+    padding: 16px;
+  }
+}
