@@ -1,9 +1,14 @@
 import { useState } from 'react';
-import { ChevronDown, ChevronUp, Upload, X } from 'lucide-react';
+import { ChevronDown, ChevronUp, X, Image } from 'lucide-react';
+import ImageKitBrowser from '../../../components/ImageKitBrowser';
 import './HeroSection.css';
 
 const HeroSection = () => {
   const [expandedSection, setExpandedSection] = useState(null);
+  
+  // ImageKit Browser Modal State
+  const [isImageKitOpen, setIsImageKitOpen] = useState(false);
+  const [imageKitTarget, setImageKitTarget] = useState(null); // 'rightSide' or 'slider'
   
   // Left Side Section State
   const [leftSideData, setLeftSideData] = useState({
@@ -53,19 +58,23 @@ const HeroSection = () => {
     setRightSideData(prev => ({ ...prev, [field]: value }));
   };
 
-  const handleRightSideImageUpload = (e) => {
-    const file = e.target.files[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setRightSideData(prev => ({ ...prev, image: reader.result }));
-      };
-      reader.readAsDataURL(file);
-    }
-  };
-
   const removeRightSideImage = () => {
     setRightSideData(prev => ({ ...prev, image: null }));
+  };
+
+  // ImageKit Browser Handlers
+  const openImageKitBrowser = (target) => {
+    setImageKitTarget(target);
+    setIsImageKitOpen(true);
+  };
+
+  const handleImageKitSelect = (imageUrl) => {
+    if (imageKitTarget === 'rightSide') {
+      setRightSideData(prev => ({ ...prev, image: imageUrl }));
+    } else if (imageKitTarget === 'slider') {
+      setSliderImages(prev => [...prev, { id: Date.now() + Math.random(), url: imageUrl }]);
+    }
+    setImageKitTarget(null);
   };
 
   const handleRightSideSave = () => {
@@ -83,17 +92,6 @@ const HeroSection = () => {
   };
 
   // Slider Section Handlers
-  const handleSliderImageUpload = (e) => {
-    const files = Array.from(e.target.files);
-    files.forEach(file => {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setSliderImages(prev => [...prev, { id: Date.now() + Math.random(), url: reader.result }]);
-      };
-      reader.readAsDataURL(file);
-    });
-  };
-
   const removeSliderImage = (id) => {
     setSliderImages(prev => prev.filter(img => img.id !== id));
   };
@@ -196,26 +194,36 @@ const HeroSection = () => {
               <label className="form-label">Image</label>
               <div className="image-upload-area">
                 {rightSideData.image ? (
-                  <div className="image-preview">
-                    <img src={rightSideData.image} alt="Right side preview" />
-                    <button 
-                      className="remove-image-btn"
-                      onClick={removeRightSideImage}
-                    >
-                      <X size={16} />
-                    </button>
+                  <div className="image-selected-container">
+                    <div className="image-preview">
+                      <img src={rightSideData.image} alt="Right side preview" />
+                    </div>
+                    <div className="image-actions">
+                      <button 
+                        type="button"
+                        className="btn-change"
+                        onClick={() => openImageKitBrowser('rightSide')}
+                      >
+                        Change
+                      </button>
+                      <button 
+                        type="button"
+                        className="btn-remove"
+                        onClick={removeRightSideImage}
+                      >
+                        Remove
+                      </button>
+                    </div>
                   </div>
                 ) : (
-                  <label className="upload-label">
-                    <Upload size={24} />
-                    <span>Click to upload image</span>
-                    <input
-                      type="file"
-                      accept="image/*"
-                      onChange={handleRightSideImageUpload}
-                      style={{ display: 'none' }}
-                    />
-                  </label>
+                  <button 
+                    type="button"
+                    className="choose-image-btn"
+                    onClick={() => openImageKitBrowser('rightSide')}
+                  >
+                    <Image size={24} />
+                    <span>Choose Image</span>
+                  </button>
                 )}
               </div>
             </div>
@@ -254,29 +262,40 @@ const HeroSection = () => {
             <div className="form-group">
               <label className="form-label">Slider Images</label>
               
-              <label className="upload-button">
-                <Upload size={18} />
-                <span>Upload Images</span>
-                <input
-                  type="file"
-                  accept="image/*"
-                  multiple
-                  onChange={handleSliderImageUpload}
-                  style={{ display: 'none' }}
-                />
-              </label>
+              <button 
+                type="button"
+                className="choose-image-button"
+                onClick={() => openImageKitBrowser('slider')}
+              >
+                <Image size={18} />
+                <span>Choose Image</span>
+              </button>
 
               {sliderImages.length > 0 && (
                 <div className="slider-images-grid">
                   {sliderImages.map((image) => (
                     <div key={image.id} className="slider-image-item">
                       <img src={image.url} alt="Slider" />
-                      <button 
-                        className="remove-slider-image-btn"
-                        onClick={() => removeSliderImage(image.id)}
-                      >
-                        <X size={16} />
-                      </button>
+                      <div className="slider-image-actions">
+                        <button 
+                          type="button"
+                          className="btn-change-small"
+                          onClick={() => {
+                            // Remove this image and open modal to select new one
+                            removeSliderImage(image.id);
+                            openImageKitBrowser('slider');
+                          }}
+                        >
+                          Change
+                        </button>
+                        <button 
+                          type="button"
+                          className="btn-remove-small"
+                          onClick={() => removeSliderImage(image.id)}
+                        >
+                          Remove
+                        </button>
+                      </div>
                     </div>
                   ))}
                 </div>
@@ -294,6 +313,13 @@ const HeroSection = () => {
           </div>
         )}
       </div>
+
+      {/* ImageKit Browser Modal */}
+      <ImageKitBrowser
+        isOpen={isImageKitOpen}
+        onClose={() => setIsImageKitOpen(false)}
+        onSelectImage={handleImageKitSelect}
+      />
     </div>
   );
 };
