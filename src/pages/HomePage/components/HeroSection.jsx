@@ -154,6 +154,7 @@ const HeroSection = () => {
   };
 
   const handleImageKitSelect = (imageUrl) => {
+    console.log('HeroSection - Image selected:', imageUrl, 'Target:', imageKitTarget);
     if (imageKitTarget === 'leftSideBg') {
       setLeftSideData(prev => ({ ...prev, backgroundImage: imageUrl }));
     } else if (imageKitTarget === 'rightSide') {
@@ -553,7 +554,7 @@ const HeroSection = () => {
       <ImageKitBrowser
         isOpen={isImageKitOpen}
         onClose={() => setIsImageKitOpen(false)}
-        onSelectImage={handleImageKitSelect}
+        onSelect={handleImageKitSelect}
       />
     </div>
   );

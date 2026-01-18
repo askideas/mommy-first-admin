@@ -68,15 +68,22 @@ const ImageKitBrowser = ({ isOpen, onClose, onSelect }) => {
     }
   }, [isOpen, fetchImages]);
 
-  const handleImageClick = (image) => {
+  const handleImageClick = (e, image) => {
+    e.stopPropagation();
+    console.log('Image clicked:', image.name, image.fileId);
     setSelectedImage(image);
   };
 
-  const handleSelectConfirm = () => {
+  const handleSelectConfirm = (e) => {
+    e.stopPropagation();
+    console.log('Select button clicked, selectedImage:', selectedImage);
     if (selectedImage && onSelect) {
+      console.log('Calling onSelect with URL:', selectedImage.url);
       onSelect(selectedImage.url);
       onClose();
       setSelectedImage(null);
+    } else {
+      console.warn('Cannot select: selectedImage or onSelect missing', { selectedImage, onSelect });
     }
   };
 
@@ -255,7 +262,7 @@ const ImageKitBrowser = ({ isOpen, onClose, onSelect }) => {
                 <div
                   key={image.fileId}
                   className={`imagekit-list-item ${selectedImage?.fileId === image.fileId ? 'selected' : ''}`}
-                  onClick={() => handleImageClick(image)}
+                  onClick={(e) => handleImageClick(e, image)}
                 >
                   <div className="imagekit-list-thumbnail">
                     <img

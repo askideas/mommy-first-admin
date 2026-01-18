@@ -64,6 +64,7 @@ const Reviews = () => {
   };
 
   const handleImageKitSelect = (imageUrl) => {
+    console.log('Reviews - Image selected:', imageUrl);
     setReviewData(prev => ({
       ...prev,
       images: [...prev.images, { id: Date.now() + Math.random(), url: imageUrl }]

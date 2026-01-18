@@ -214,6 +214,7 @@
 .imagekit-list {
   display: flex;
   flex-direction: column;
+  user-select: none;
 }
 
 .imagekit-list-item {
@@ -224,15 +225,29 @@
   cursor: pointer;
   transition: all 0.2s;
   border-bottom: 1px solid #f3f4f6;
+  position: relative;
 }
 
 .imagekit-list-item:hover {
   background: #f9fafb;
 }
 
+.imagekit-list-item:active {
+  background: rgba(220, 95, 146, 0.05);
+}
+
 .imagekit-list-item.selected {
   background: rgba(220, 95, 146, 0.1);
   border-left: 3px solid #DC5F92;
+}
+
+.imagekit-list-item.selected::after {
+  content: '✓';
+  position: absolute;
+  right: 20px;
+  font-size: 18px;
+  color: #DC5F92;
+  font-weight: bold;
 }
 
 .imagekit-list-thumbnail {
@@ -403,11 +418,19 @@
   font-weight: 500;
   transition: all 0.2s;
   white-space: nowrap;
+  flex-shrink: 0;
+  position: relative;
+  z-index: 10;
 }
 
 .imagekit-select-btn:hover {
   transform: translateY(-1px);
   box-shadow: 0 4px 12px rgba(220, 95, 146, 0.3);
+}
+
+.imagekit-select-btn:active {
+  transform: translateY(0);
+  box-shadow: 0 2px 6px rgba(220, 95, 146, 0.2);
 }
 
 @media (max-width: 640px) {

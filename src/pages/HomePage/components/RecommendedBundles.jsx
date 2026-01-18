@@ -92,7 +92,12 @@ const RecommendedBundles = () => {
   };
 
   const handleImageKitSelect = (imageUrl) => {
-    setImageData({ image: imageUrl });
+    console.log('RecommendedBundles - Image selected:', imageUrl);
+    setImageData(prev => {
+      const newData = { ...prev, image: imageUrl };
+      console.log('RecommendedBundles - Updated imageData:', newData);
+      return newData;
+    });
   };
 
   // Heading Section Handlers

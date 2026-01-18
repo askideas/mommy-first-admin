@@ -98,6 +98,7 @@ const ShopByCategory = () => {
   };
 
   const handleImageKitSelect = (imageUrl) => {
+    console.log('ShopByCategory - Image selected:', imageUrl, 'Target:', imageKitTarget);
     if (imageKitTarget === 'category1') {
       setCategory1Data(prev => ({ ...prev, image: imageUrl }));
     } else if (imageKitTarget === 'category2') {
