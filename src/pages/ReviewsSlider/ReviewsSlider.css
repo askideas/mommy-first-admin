@@ -168,37 +168,53 @@
 
 .image-upload-container {
   display: flex;
-  align-items: center;
+  flex-direction: column;
+  align-items: flex-start;
   gap: 12px;
+  width: 100%;
 }
 
-.file-input {
-  display: none;
-}
-
-.upload-button {
-  display: inline-flex;
+.choose-image-btn-review {
+  display: flex;
+  flex-direction: column;
   align-items: center;
-  gap: 6px;
-  padding: 8px 16px;
-  background: linear-gradient(218.44deg, #FD8CBB 4.36%, #DC5F92 86.2%);
-  color: white;
-  border-radius: 6px;
+  gap: 8px;
   cursor: pointer;
-  font-weight: 600;
-  font-size: 13px;
+  padding: 30px;
+  color: #666;
+  background: transparent;
+  border: 2px dashed #e0e0e0;
+  border-radius: 8px;
+  width: 100%;
   transition: all 0.2s;
-  border: none;
 }
 
-.upload-button:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 2px 8px rgba(220, 95, 146, 0.2);
+.choose-image-btn-review:hover {
+  color: #DC5F92;
+  border-color: #DC5F92;
+  background: rgba(220, 95, 146, 0.02);
+}
+
+.choose-image-btn-review svg {
+  color: #DC5F92;
+}
+
+.choose-image-btn-review span {
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.image-selected-container {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  align-items: center;
 }
 
 .photo-preview {
-  width: 60px;
-  height: 60px;
+  width: 100px;
+  height: 100px;
   border: 1px solid #e0e0e0;
   border-radius: 50%;
   overflow: hidden;
@@ -211,9 +227,64 @@
   object-fit: cover;
 }
 
+.image-actions {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+}
+
+.btn-change,
+.btn-remove {
+  padding: 8px 20px;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+  border: none;
+}
+
+.btn-change {
+  background: linear-gradient(218.44deg, #FD8CBB 4.36%, #DC5F92 86.2%);
+  color: white;
+}
+
+.btn-change:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(220, 95, 146, 0.3);
+}
+
+.btn-remove {
+  background: white;
+  color: #ef4444;
+  border: 1px solid #ef4444;
+}
+
+.btn-remove:hover {
+  background: #ef4444;
+  color: white;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
+}
+
+.save-status {
+  font-size: 13px;
+  font-weight: 500;
+  margin-right: auto;
+}
+
+.save-status.success {
+  color: #10b981;
+}
+
+.save-status.error {
+  color: #ef4444;
+}
+
 .form-actions {
   display: flex;
   gap: 8px;
+  align-items: center;
   justify-content: flex-end;
   margin-top: 16px;
 }

@@ -1,5 +1,8 @@
-import { useState } from 'react';
-import { Plus, Upload, Save, Edit, Trash2, X, Star } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { Plus, Upload, Save, Edit, Trash2, X, Star, Image } from 'lucide-react';
+import { doc, getDoc, setDoc } from 'firebase/firestore';
+import { db } from '../../config/firebase';
+import ImageKitBrowser from '../../components/ImageKitBrowser';
 import './ReviewsSlider.css';
 
 const ReviewsSlider = () => {
@@ -13,11 +16,81 @@ const ReviewsSlider = () => {
     photo: '',
     status: 'active'
   });
+  const [loading, setLoading] = useState(false);
+  const [saveStatus, setSaveStatus] = useState(null);
+  const [isImageKitOpen, setIsImageKitOpen] = useState(false);
+
+  // Load data from Firebase on component mount
+  useEffect(() => {
+    if (db) {
+      loadDataFromFirebase();
+    }
+  }, []);
+
+  const loadDataFromFirebase = async () => {
+    if (!db) {
+      console.error('Firebase not initialized');
+      return;
+    }
+    
+    try {
+      setLoading(true);
+      const docRef = doc(db, 'reviewsSlider', 'reviews');
+      const docSnap = await getDoc(docRef);
+      
+      if (docSnap.exists()) {
+        const data = docSnap.data();
+        setReviews(data.reviews || []);
+        console.log('Reviews loaded from Firebase:', data.reviews);
+      }
+    } catch (error) {
+      console.error('Error loading reviews from Firebase:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const saveToFirebase = async (updatedReviews) => {
+    if (!db) {
+      console.error('Firebase not initialized');
+      return;
+    }
+    
+    try {
+      setLoading(true);
+      setSaveStatus('saving');
+      const docRef = doc(db, 'reviewsSlider', 'reviews');
+      
+      await setDoc(docRef, {
+        reviews: updatedReviews,
+        lastUpdated: new Date().toISOString()
+      });
+      
+      setSaveStatus('success');
+      setTimeout(() => setSaveStatus(null), 2000);
+      console.log('Reviews saved to Firebase:', updatedReviews);
+    } catch (error) {
+      console.error('Error saving reviews to Firebase:', error);
+      setSaveStatus('error');
+      setTimeout(() => setSaveStatus(null), 2000);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleAddReviewClick = () => {
     setShowReviewForm(true);
     setEditingReview(null);
     setReviewForm({ text: '', rating: 5, reviewerName: '', photo: '', status: 'active' });
+  };
+
+  const openImageKitBrowser = () => {
+    setIsImageKitOpen(true);
+  };
+
+  const handleImageKitSelect = (imageUrl) => {
+    console.log('ReviewsSlider - Image selected:', imageUrl);
+    setReviewForm(prev => ({ ...prev, photo: imageUrl }));
   };
 
   const handlePhotoChange = (e) => {
@@ -31,19 +104,22 @@ const ReviewsSlider = () => {
     }
   };
 
-  const handleSaveReview = () => {
+  const handleSaveReview = async () => {
     if (!reviewForm.text || !reviewForm.reviewerName || !reviewForm.photo) {
       alert('Please fill in all fields');
       return;
     }
 
+    let updatedReviews;
     if (editingReview !== null) {
-      const updatedReviews = [...reviews];
+      updatedReviews = [...reviews];
       updatedReviews[editingReview] = { ...reviewForm };
-      setReviews(updatedReviews);
     } else {
-      setReviews([...reviews, { ...reviewForm }]);
+      updatedReviews = [...reviews, { ...reviewForm }];
     }
+    
+    setReviews(updatedReviews);
+    await saveToFirebase(updatedReviews);
 
     setShowReviewForm(false);
     setReviewForm({ text: '', rating: 5, reviewerName: '', photo: '', status: 'active' });
@@ -56,9 +132,11 @@ const ReviewsSlider = () => {
     setShowReviewForm(true);
   };
 
-  const handleDeleteReview = (index) => {
+  const handleDeleteReview = async (index) => {
     if (window.confirm('Are you sure you want to delete this review?')) {
-      setReviews(reviews.filter((_, i) => i !== index));
+      const updatedReviews = reviews.filter((_, i) => i !== index);
+      setReviews(updatedReviews);
+      await saveToFirebase(updatedReviews);
     }
   };
 
@@ -151,21 +229,37 @@ const ReviewsSlider = () => {
               <div className="form-group">
                 <label className="form-label">Reviewer Photo</label>
                 <div className="image-upload-container">
-                  <input
-                    type="file"
-                    accept="image/*"
-                    onChange={handlePhotoChange}
-                    className="file-input"
-                    id="reviewer-photo"
-                  />
-                  <label htmlFor="reviewer-photo" className="upload-button">
-                    <Upload size={16} />
-                    <span>Choose Photo</span>
-                  </label>
-                  {reviewForm.photo && (
-                    <div className="photo-preview">
-                      <img src={reviewForm.photo} alt="Reviewer" />
+                  {reviewForm.photo ? (
+                    <div className="image-selected-container">
+                      <div className="photo-preview">
+                        <img src={reviewForm.photo} alt="Reviewer" />
+                      </div>
+                      <div className="image-actions">
+                        <button 
+                          type="button"
+                          className="btn-change"
+                          onClick={openImageKitBrowser}
+                        >
+                          Change
+                        </button>
+                        <button 
+                          type="button"
+                          className="btn-remove"
+                          onClick={() => setReviewForm({ ...reviewForm, photo: '' })}
+                        >
+                          Remove
+                        </button>
+                      </div>
                     </div>
+                  ) : (
+                    <button 
+                      type="button"
+                      className="choose-image-btn-review" 
+                      onClick={openImageKitBrowser}
+                    >
+                      <Image size={24} />
+                      <span>Choose Photo</span>
+                    </button>
                   )}
                 </div>
               </div>
@@ -184,19 +278,29 @@ const ReviewsSlider = () => {
             </div>
 
             <div className="form-actions">
-              <button className="cancel-button" onClick={handleCancelReview}>
+              {saveStatus === 'success' && (
+                <span className="save-status success">Saved successfully!</span>
+              )}
+              {saveStatus === 'error' && (
+                <span className="save-status error">Error saving data</span>
+              )}
+              <button className="cancel-button" onClick={handleCancelReview} disabled={loading}>
                 Cancel
               </button>
-              <button className="save-button" onClick={handleSaveReview}>
+              <button className="save-button" onClick={handleSaveReview} disabled={loading}>
                 <Save size={16} />
-                <span>Save Review</span>
+                <span>{loading ? 'Saving...' : 'Save Review'}</span>
               </button>
             </div>
           </div>
         )}
 
         <div className="reviews-list">
-          {reviews.length === 0 ? (
+          {loading && reviews.length === 0 ? (
+            <div className="empty-state">
+              <p>Loading reviews...</p>
+            </div>
+          ) : reviews.length === 0 ? (
             <div className="empty-state">
               <p>No reviews added yet. Click "Add Review" to create one.</p>
             </div>
@@ -245,6 +349,13 @@ const ReviewsSlider = () => {
           )}
         </div>
       </div>
+
+      {/* ImageKit Browser Modal */}
+      <ImageKitBrowser
+        isOpen={isImageKitOpen}
+        onClose={() => setIsImageKitOpen(false)}
+        onSelect={handleImageKitSelect}
+      />
     </div>
   );
 };
