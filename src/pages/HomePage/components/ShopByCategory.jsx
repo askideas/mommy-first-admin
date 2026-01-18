@@ -1,9 +1,18 @@
-import { useState } from 'react';
-import { ChevronDown, ChevronUp, Upload, X } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { ChevronDown, ChevronUp, X, Image } from 'lucide-react';
+import { doc, getDoc, setDoc } from 'firebase/firestore';
+import { db } from '../../../config/firebase';
+import ImageKitBrowser from '../../../components/ImageKitBrowser';
 import './ShopByCategory.css';
 
 const ShopByCategory = () => {
   const [expandedSection, setExpandedSection] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [saveStatus, setSaveStatus] = useState({ section: null, status: null });
+  
+  // ImageKit Browser Modal State
+  const [isImageKitOpen, setIsImageKitOpen] = useState(false);
+  const [imageKitTarget, setImageKitTarget] = useState(null);
   
   // Category 1 State
   const [category1Data, setCategory1Data] = useState({
@@ -35,8 +44,68 @@ const ShopByCategory = () => {
   });
   const [savedCategory3Data, setSavedCategory3Data] = useState(null);
 
+  // Load data from Firebase on component mount
+  useEffect(() => {
+    if (db) {
+      loadDataFromFirebase();
+    }
+  }, []);
+
+  const loadDataFromFirebase = async () => {
+    if (!db) {
+      console.error('Firebase not initialized');
+      return;
+    }
+    
+    try {
+      setLoading(true);
+      const docRef = doc(db, 'homepage', 'shopbycategory');
+      const docSnap = await getDoc(docRef);
+      
+      if (docSnap.exists()) {
+        const data = docSnap.data();
+        
+        if (data.category1) {
+          setCategory1Data(data.category1);
+          setSavedCategory1Data(data.category1);
+        }
+        
+        if (data.category2) {
+          setCategory2Data(data.category2);
+          setSavedCategory2Data(data.category2);
+        }
+        
+        if (data.category3) {
+          setCategory3Data(data.category3);
+          setSavedCategory3Data(data.category3);
+        }
+      }
+    } catch (error) {
+      console.error('Error loading data from Firebase:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const toggleSection = (section) => {
     setExpandedSection(expandedSection === section ? null : section);
+  };
+
+  // ImageKit Browser Handlers
+  const openImageKitBrowser = (target) => {
+    setImageKitTarget(target);
+    setIsImageKitOpen(true);
+  };
+
+  const handleImageKitSelect = (imageUrl) => {
+    if (imageKitTarget === 'category1') {
+      setCategory1Data(prev => ({ ...prev, image: imageUrl }));
+    } else if (imageKitTarget === 'category2') {
+      setCategory2Data(prev => ({ ...prev, image: imageUrl }));
+    } else if (imageKitTarget === 'category3') {
+      setCategory3Data(prev => ({ ...prev, image: imageUrl }));
+    }
+    setImageKitTarget(null);
   };
 
   // Category 1 Handlers
@@ -44,25 +113,35 @@ const ShopByCategory = () => {
     setCategory1Data(prev => ({ ...prev, [field]: value }));
   };
 
-  const handleCategory1ImageUpload = (e) => {
-    const file = e.target.files[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setCategory1Data(prev => ({ ...prev, image: reader.result }));
-      };
-      reader.readAsDataURL(file);
-    }
-  };
-
   const removeCategory1Image = () => {
     setCategory1Data(prev => ({ ...prev, image: null }));
   };
 
-  const handleCategory1Save = () => {
-    setSavedCategory1Data({ ...category1Data });
-    console.log('Category 1 Data Saved:', category1Data);
-    // Add your API call here
+  const handleCategory1Save = async () => {
+    try {
+      setLoading(true);
+      setSaveStatus({ section: 'category1', status: 'saving' });
+      
+      const docRef = doc(db, 'homepage', 'shopbycategory');
+      const docSnap = await getDoc(docRef);
+      const existingData = docSnap.exists() ? docSnap.data() : {};
+      
+      await setDoc(docRef, {
+        ...existingData,
+        category1: category1Data
+      });
+      
+      setSavedCategory1Data({ ...category1Data });
+      setSaveStatus({ section: 'category1', status: 'success' });
+      setTimeout(() => setSaveStatus({ section: null, status: null }), 2000);
+      console.log('Category 1 Data Saved to Firebase:', category1Data);
+    } catch (error) {
+      console.error('Error saving category 1 data:', error);
+      setSaveStatus({ section: 'category1', status: 'error' });
+      setTimeout(() => setSaveStatus({ section: null, status: null }), 2000);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleCategory1Cancel = () => {
@@ -78,25 +157,35 @@ const ShopByCategory = () => {
     setCategory2Data(prev => ({ ...prev, [field]: value }));
   };
 
-  const handleCategory2ImageUpload = (e) => {
-    const file = e.target.files[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setCategory2Data(prev => ({ ...prev, image: reader.result }));
-      };
-      reader.readAsDataURL(file);
-    }
-  };
-
   const removeCategory2Image = () => {
     setCategory2Data(prev => ({ ...prev, image: null }));
   };
 
-  const handleCategory2Save = () => {
-    setSavedCategory2Data({ ...category2Data });
-    console.log('Category 2 Data Saved:', category2Data);
-    // Add your API call here
+  const handleCategory2Save = async () => {
+    try {
+      setLoading(true);
+      setSaveStatus({ section: 'category2', status: 'saving' });
+      
+      const docRef = doc(db, 'homepage', 'shopbycategory');
+      const docSnap = await getDoc(docRef);
+      const existingData = docSnap.exists() ? docSnap.data() : {};
+      
+      await setDoc(docRef, {
+        ...existingData,
+        category2: category2Data
+      });
+      
+      setSavedCategory2Data({ ...category2Data });
+      setSaveStatus({ section: 'category2', status: 'success' });
+      setTimeout(() => setSaveStatus({ section: null, status: null }), 2000);
+      console.log('Category 2 Data Saved to Firebase:', category2Data);
+    } catch (error) {
+      console.error('Error saving category 2 data:', error);
+      setSaveStatus({ section: 'category2', status: 'error' });
+      setTimeout(() => setSaveStatus({ section: null, status: null }), 2000);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleCategory2Cancel = () => {
@@ -112,25 +201,34 @@ const ShopByCategory = () => {
     setCategory3Data(prev => ({ ...prev, [field]: value }));
   };
 
-  const handleCategory3ImageUpload = (e) => {
-    const file = e.target.files[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setCategory3Data(prev => ({ ...prev, image: reader.result }));
-      };
-      reader.readAsDataURL(file);
-    }
-  };
-
   const removeCategory3Image = () => {
     setCategory3Data(prev => ({ ...prev, image: null }));
   };
 
-  const handleCategory3Save = () => {
-    setSavedCategory3Data({ ...category3Data });
-    console.log('Category 3 Data Saved:', category3Data);
-    // Add your API call here
+  const handleCategory3Save = async () => {
+    try {
+      setLoading(true);
+      setSaveStatus({ section: 'category3', status: 'saving' });
+      
+      const docRef = doc(db, 'homepage', 'shopbycategory');
+      const docSnap = await getDoc(docRef);
+      const existingData = docSnap.exists() ? docSnap.data() : {};
+      
+      await setDoc(docRef, {
+        ...existingData,
+        category3: category3Data
+      });
+      
+      setSaveStatus({ section: 'category3', status: 'success' });
+      setTimeout(() => setSaveStatus({ section: null, status: null }), 2000);
+      console.log('Category 3 Data Saved to Firebase:', category3Data);
+    } catch (error) {
+      console.error('Error saving category 3 data:', error);
+      setSaveStatus({ section: 'category3', status: 'error' });
+      setTimeout(() => setSaveStatus({ section: null, status: null }), 2000);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleCategory3Cancel = () => {
@@ -141,7 +239,8 @@ const ShopByCategory = () => {
     }
   };
 
-  const renderCategorySection = (categoryNum, data, handleChange, handleImageUpload, removeImage, handleSave, handleCancel) => {
+  const renderCategorySection = (categoryNum, data, handleChange, removeImage, handleSave, handleCancel) => {
+    const sectionKey = `category${categoryNum}`;
     return (
       <div className="config-section">
         <button 
@@ -168,16 +267,10 @@ const ShopByCategory = () => {
                     </button>
                   </div>
                 ) : (
-                  <label className="upload-label">
-                    <Upload size={24} />
-                    <span>Click to upload image</span>
-                    <input
-                      type="file"
-                      accept="image/*"
-                      onChange={handleImageUpload}
-                      style={{ display: 'none' }}
-                    />
-                  </label>
+                  <button className="upload-label" onClick={() => openImageKitBrowser(`category${categoryNum}`)}>
+                    <Image size={24} />
+                    <span>Browse ImageKit</span>
+                  </button>
                 )}
               </div>
             </div>
@@ -227,8 +320,16 @@ const ShopByCategory = () => {
             </div>
 
             <div className="section-actions">
-              <button className="btn-cancel" onClick={handleCancel}>Cancel</button>
-              <button className="btn-save" onClick={handleSave}>Save</button>
+              {saveStatus.section === sectionKey && saveStatus.status === 'success' && (
+                <span className="save-status success">Saved successfully!</span>
+              )}
+              {saveStatus.section === sectionKey && saveStatus.status === 'error' && (
+                <span className="save-status error">Error saving data</span>
+              )}
+              <button className="btn-cancel" onClick={handleCancel} disabled={loading}>Cancel</button>
+              <button className="btn-save" onClick={handleSave} disabled={loading}>
+                {loading && saveStatus.section === sectionKey ? 'Saving...' : 'Save'}
+              </button>
             </div>
           </div>
         )}
@@ -240,9 +341,16 @@ const ShopByCategory = () => {
     <div className="shop-by-category-container">
       <h2 className="section-main-title">Shop by Category Configuration</h2>
 
-      {renderCategorySection(1, category1Data, handleCategory1Change, handleCategory1ImageUpload, removeCategory1Image, handleCategory1Save, handleCategory1Cancel)}
-      {renderCategorySection(2, category2Data, handleCategory2Change, handleCategory2ImageUpload, removeCategory2Image, handleCategory2Save, handleCategory2Cancel)}
-      {renderCategorySection(3, category3Data, handleCategory3Change, handleCategory3ImageUpload, removeCategory3Image, handleCategory3Save, handleCategory3Cancel)}
+      {renderCategorySection(1, category1Data, handleCategory1Change, removeCategory1Image, handleCategory1Save, handleCategory1Cancel)}
+      {renderCategorySection(2, category2Data, handleCategory2Change, removeCategory2Image, handleCategory2Save, handleCategory2Cancel)}
+      {renderCategorySection(3, category3Data, handleCategory3Change, removeCategory3Image, handleCategory3Save, handleCategory3Cancel)}
+
+      {/* ImageKit Browser Modal */}
+      <ImageKitBrowser
+        isOpen={isImageKitOpen}
+        onClose={() => setIsImageKitOpen(false)}
+        onSelect={handleImageKitSelect}
+      />
     </div>
   );
 };

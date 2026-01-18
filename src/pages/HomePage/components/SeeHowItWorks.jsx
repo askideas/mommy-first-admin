@@ -1,9 +1,13 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { ChevronDown, ChevronUp, Plus, X, Upload } from 'lucide-react';
+import { doc, getDoc, setDoc } from 'firebase/firestore';
+import { db } from '../../../config/firebase';
 import './SeeHowItWorks.css';
 
 const SeeHowItWorks = () => {
   const [expandedSection, setExpandedSection] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [saveStatus, setSaveStatus] = useState({ section: null, status: null });
   
   // Heading Section State
   const [headingData, setHeadingData] = useState({
@@ -17,6 +21,44 @@ const SeeHowItWorks = () => {
   const [videos, setVideos] = useState([]);
   const [savedVideos, setSavedVideos] = useState([]);
 
+  // Load data from Firebase on component mount
+  useEffect(() => {
+    if (db) {
+      loadDataFromFirebase();
+    }
+  }, []);
+
+  const loadDataFromFirebase = async () => {
+    if (!db) {
+      console.error('Firebase not initialized');
+      return;
+    }
+    
+    try {
+      setLoading(true);
+      const docRef = doc(db, 'homepage', 'seehowworks');
+      const docSnap = await getDoc(docRef);
+      
+      if (docSnap.exists()) {
+        const data = docSnap.data();
+        
+        if (data.heading) {
+          setHeadingData(data.heading);
+          setSavedHeadingData(data.heading);
+        }
+        
+        if (data.videos) {
+          setVideos(data.videos);
+          setSavedVideos(data.videos);
+        }
+      }
+    } catch (error) {
+      console.error('Error loading data from Firebase:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const toggleSection = (section) => {
     setExpandedSection(expandedSection === section ? null : section);
   };
@@ -26,10 +68,31 @@ const SeeHowItWorks = () => {
     setHeadingData(prev => ({ ...prev, [field]: value }));
   };
 
-  const handleHeadingSave = () => {
-    setSavedHeadingData({ ...headingData });
-    console.log('Heading Data Saved:', headingData);
-    // Add your API call here
+  const handleHeadingSave = async () => {
+    try {
+      setLoading(true);
+      setSaveStatus({ section: 'heading', status: 'saving' });
+      
+      const docRef = doc(db, 'homepage', 'seehowworks');
+      const docSnap = await getDoc(docRef);
+      const existingData = docSnap.exists() ? docSnap.data() : {};
+      
+      await setDoc(docRef, {
+        ...existingData,
+        heading: headingData
+      });
+      
+      setSavedHeadingData({ ...headingData });
+      setSaveStatus({ section: 'heading', status: 'success' });
+      setTimeout(() => setSaveStatus({ section: null, status: null }), 2000);
+      console.log('Heading Data Saved to Firebase:', headingData);
+    } catch (error) {
+      console.error('Error saving heading data:', error);
+      setSaveStatus({ section: 'heading', status: 'error' });
+      setTimeout(() => setSaveStatus({ section: null, status: null }), 2000);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleHeadingCancel = () => {
@@ -80,10 +143,31 @@ const SeeHowItWorks = () => {
     ));
   };
 
-  const handleVideosSave = () => {
-    setSavedVideos([...videos]);
-    console.log('Videos Saved:', videos);
-    // Add your API call here
+  const handleVideosSave = async () => {
+    try {
+      setLoading(true);
+      setSaveStatus({ section: 'videos', status: 'saving' });
+      
+      const docRef = doc(db, 'homepage', 'seehowworks');
+      const docSnap = await getDoc(docRef);
+      const existingData = docSnap.exists() ? docSnap.data() : {};
+      
+      await setDoc(docRef, {
+        ...existingData,
+        videos: videos
+      });
+      
+      setSavedVideos([...videos]);
+      setSaveStatus({ section: 'videos', status: 'success' });
+      setTimeout(() => setSaveStatus({ section: null, status: null }), 2000);
+      console.log('Videos Saved to Firebase:', videos);
+    } catch (error) {
+      console.error('Error saving videos:', error);
+      setSaveStatus({ section: 'videos', status: 'error' });
+      setTimeout(() => setSaveStatus({ section: null, status: null }), 2000);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleVideosCancel = () => {
@@ -144,8 +228,16 @@ const SeeHowItWorks = () => {
             </div>
 
             <div className="section-actions">
-              <button className="btn-cancel" onClick={handleHeadingCancel}>Cancel</button>
-              <button className="btn-save" onClick={handleHeadingSave}>Save</button>
+              {saveStatus.section === 'heading' && saveStatus.status === 'success' && (
+                <span className="save-status success">Saved successfully!</span>
+              )}
+              {saveStatus.section === 'heading' && saveStatus.status === 'error' && (
+                <span className="save-status error">Error saving data</span>
+              )}
+              <button className="btn-cancel" onClick={handleHeadingCancel} disabled={loading}>Cancel</button>
+              <button className="btn-save" onClick={handleHeadingSave} disabled={loading}>
+                {loading && saveStatus.section === 'heading' ? 'Saving...' : 'Save'}
+              </button>
             </div>
           </div>
         )}
@@ -230,8 +322,16 @@ const SeeHowItWorks = () => {
           )}
 
           <div className="section-actions">
-            <button className="btn-cancel" onClick={handleVideosCancel}>Cancel</button>
-            <button className="btn-save" onClick={handleVideosSave}>Save</button>
+            {saveStatus.section === 'videos' && saveStatus.status === 'success' && (
+              <span className="save-status success">Saved successfully!</span>
+            )}
+            {saveStatus.section === 'videos' && saveStatus.status === 'error' && (
+              <span className="save-status error">Error saving data</span>
+            )}
+            <button className="btn-cancel" onClick={handleVideosCancel} disabled={loading}>Cancel</button>
+            <button className="btn-save" onClick={handleVideosSave} disabled={loading}>
+              {loading && saveStatus.section === 'videos' ? 'Saving...' : 'Save'}
+            </button>
           </div>
         </div>
       </div>

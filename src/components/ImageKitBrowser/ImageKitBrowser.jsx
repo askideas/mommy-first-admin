@@ -4,7 +4,7 @@ import './ImageKitBrowser.css';
 
 const IMAGES_PER_PAGE = 14;
 
-const ImageKitBrowser = ({ isOpen, onClose, onSelectImage }) => {
+const ImageKitBrowser = ({ isOpen, onClose, onSelect }) => {
   const [images, setImages] = useState([]);
   const [loading, setLoading] = useState(false);
   const [uploading, setUploading] = useState(false);
@@ -73,8 +73,8 @@ const ImageKitBrowser = ({ isOpen, onClose, onSelectImage }) => {
   };
 
   const handleSelectConfirm = () => {
-    if (selectedImage) {
-      onSelectImage(selectedImage.url);
+    if (selectedImage && onSelect) {
+      onSelect(selectedImage.url);
       onClose();
       setSelectedImage(null);
     }
@@ -97,49 +97,67 @@ const ImageKitBrowser = ({ isOpen, onClose, onSelectImage }) => {
     setError(null);
 
     try {
-      // Get authentication parameters from server or generate them
-      const authHeader = btoa(`${IMAGEKIT_PRIVATE_KEY}:`);
+      // Convert file to base64
+      const reader = new FileReader();
       
-      // Get authentication signature
-      const authResponse = await fetch('https://api.imagekit.io/v1/files', {
-        method: 'GET',
-        headers: {
-          'Authorization': `Basic ${authHeader}`,
-        },
-      });
+      reader.onloadend = async () => {
+        try {
+          const base64Data = reader.result; // Full data URL including prefix
+          
+          const authHeader = btoa(`${IMAGEKIT_PRIVATE_KEY}:`);
+          
+          // Create FormData for multipart upload
+          const formData = new FormData();
+          formData.append('file', base64Data);
+          formData.append('fileName', file.name);
+          formData.append('folder', '/mommy-first');
+          formData.append('useUniqueFileName', 'true');
+          
+          // Use the upload API with FormData
+          const response = await fetch('https://upload.imagekit.io/api/v1/files/upload', {
+            method: 'POST',
+            headers: {
+              'Authorization': `Basic ${authHeader}`,
+            },
+            body: formData,
+          });
 
-      // Create FormData for upload
-      const formData = new FormData();
-      formData.append('file', file);
-      formData.append('fileName', file.name);
-      formData.append('folder', '/Mommy First');
+          if (!response.ok) {
+            const errorData = await response.json();
+            console.error('Upload error:', errorData);
+            throw new Error(errorData.message || 'Failed to upload image');
+          }
+
+          const uploadedImage = await response.json();
+          console.log('Image uploaded successfully:', uploadedImage);
+          
+          // Refresh the image list
+          await fetchImages();
+          setCurrentPage(1);
+          setError(null);
+          
+        } catch (err) {
+          console.error('Error uploading image:', err);
+          setError(`Failed to upload image: ${err.message}`);
+        } finally {
+          setUploading(false);
+          if (fileInputRef.current) {
+            fileInputRef.current.value = '';
+          }
+        }
+      };
       
-      // Upload to ImageKit
-      const uploadResponse = await fetch('https://upload.imagekit.io/api/v1/files/upload', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Basic ${btoa(`${IMAGEKIT_PRIVATE_KEY}:`)}`,
-        },
-        body: formData,
-      });
-
-      if (!uploadResponse.ok) {
-        throw new Error('Failed to upload image');
-      }
-
-      const uploadedImage = await uploadResponse.json();
-      console.log('Image uploaded successfully:', uploadedImage);
+      reader.onerror = () => {
+        setError('Failed to read file');
+        setUploading(false);
+      };
       
-      // Refresh the image list
-      await fetchImages();
-      setCurrentPage(1);
+      reader.readAsDataURL(file);
       
     } catch (err) {
       console.error('Error uploading image:', err);
-      setError('Failed to upload image. Please try again.');
-    } finally {
+      setError(`Failed to upload image: ${err.message}`);
       setUploading(false);
-      // Reset file input
       if (fileInputRef.current) {
         fileInputRef.current.value = '';
       }

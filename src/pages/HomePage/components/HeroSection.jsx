@@ -1,20 +1,26 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { ChevronDown, ChevronUp, X, Image } from 'lucide-react';
+import { doc, getDoc, setDoc } from 'firebase/firestore';
+import { db } from '../../../config/firebase';
 import ImageKitBrowser from '../../../components/ImageKitBrowser';
 import './HeroSection.css';
 
 const HeroSection = () => {
   const [expandedSection, setExpandedSection] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [saveStatus, setSaveStatus] = useState({ section: null, status: null });
+  const [firebaseReady, setFirebaseReady] = useState(false);
   
   // ImageKit Browser Modal State
   const [isImageKitOpen, setIsImageKitOpen] = useState(false);
-  const [imageKitTarget, setImageKitTarget] = useState(null); // 'rightSide' or 'slider'
+  const [imageKitTarget, setImageKitTarget] = useState(null); // 'leftSideBg', 'rightSide', 'rightSideBg', or 'slider'
   
   // Left Side Section State
   const [leftSideData, setLeftSideData] = useState({
     labelText: '',
     description: '',
-    buttonLabel: ''
+    buttonLabel: '',
+    backgroundImage: null
   });
   const [savedLeftSideData, setSavedLeftSideData] = useState(null);
   
@@ -22,13 +28,62 @@ const HeroSection = () => {
   const [rightSideData, setRightSideData] = useState({
     heading: '',
     image: null,
-    buttonLabel: ''
+    buttonLabel: '',
+    backgroundImage: null
   });
   const [savedRightSideData, setSavedRightSideData] = useState(null);
   
   // Slider Section State
   const [sliderImages, setSliderImages] = useState([]);
   const [savedSliderImages, setSavedSliderImages] = useState([]);
+
+  // Load data from Firebase on component mount
+  useEffect(() => {
+    // Check if db is ready
+    if (db) {
+      setFirebaseReady(true);
+      loadDataFromFirebase();
+    }
+  }, []);
+
+  const loadDataFromFirebase = async () => {
+    if (!db) {
+      console.error('Firebase not initialized');
+      return;
+    }
+    
+    try {
+      setLoading(true);
+      const docRef = doc(db, 'homepage', 'herosection');
+      const docSnap = await getDoc(docRef);
+      
+      if (docSnap.exists()) {
+        const data = docSnap.data();
+        
+        // Load left side data
+        if (data.leftside) {
+          setLeftSideData(data.leftside);
+          setSavedLeftSideData(data.leftside);
+        }
+        
+        // Load right side data
+        if (data.rightside) {
+          setRightSideData(data.rightside);
+          setSavedRightSideData(data.rightside);
+        }
+        
+        // Load slider data
+        if (data.slider && data.slider.images) {
+          setSliderImages(data.slider.images);
+          setSavedSliderImages(data.slider.images);
+        }
+      }
+    } catch (error) {
+      console.error('Error loading data from Firebase:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const toggleSection = (section) => {
     setExpandedSection(expandedSection === section ? null : section);
@@ -39,17 +94,43 @@ const HeroSection = () => {
     setLeftSideData(prev => ({ ...prev, [field]: value }));
   };
 
-  const handleLeftSideSave = () => {
-    setSavedLeftSideData({ ...leftSideData });
-    console.log('Left Side Data Saved:', leftSideData);
-    // Add your API call here
+  const removeLeftSideBackgroundImage = () => {
+    setLeftSideData(prev => ({ ...prev, backgroundImage: null }));
+  };
+
+  const handleLeftSideSave = async () => {
+    try {
+      setLoading(true);
+      setSaveStatus({ section: 'left', status: 'saving' });
+      
+      const docRef = doc(db, 'homepage', 'herosection');
+      const docSnap = await getDoc(docRef);
+      
+      const existingData = docSnap.exists() ? docSnap.data() : {};
+      
+      await setDoc(docRef, {
+        ...existingData,
+        leftside: leftSideData
+      });
+      
+      setSavedLeftSideData({ ...leftSideData });
+      setSaveStatus({ section: 'left', status: 'success' });
+      setTimeout(() => setSaveStatus({ section: null, status: null }), 2000);
+      console.log('Left Side Data Saved to Firebase:', leftSideData);
+    } catch (error) {
+      console.error('Error saving left side data:', error);
+      setSaveStatus({ section: 'left', status: 'error' });
+      setTimeout(() => setSaveStatus({ section: null, status: null }), 2000);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleLeftSideCancel = () => {
     if (savedLeftSideData) {
       setLeftSideData({ ...savedLeftSideData });
     } else {
-      setLeftSideData({ labelText: '', description: '', buttonLabel: '' });
+      setLeftSideData({ labelText: '', description: '', buttonLabel: '', backgroundImage: null });
     }
   };
 
@@ -62,6 +143,10 @@ const HeroSection = () => {
     setRightSideData(prev => ({ ...prev, image: null }));
   };
 
+  const removeRightSideBackgroundImage = () => {
+    setRightSideData(prev => ({ ...prev, backgroundImage: null }));
+  };
+
   // ImageKit Browser Handlers
   const openImageKitBrowser = (target) => {
     setImageKitTarget(target);
@@ -69,25 +154,51 @@ const HeroSection = () => {
   };
 
   const handleImageKitSelect = (imageUrl) => {
-    if (imageKitTarget === 'rightSide') {
+    if (imageKitTarget === 'leftSideBg') {
+      setLeftSideData(prev => ({ ...prev, backgroundImage: imageUrl }));
+    } else if (imageKitTarget === 'rightSide') {
       setRightSideData(prev => ({ ...prev, image: imageUrl }));
+    } else if (imageKitTarget === 'rightSideBg') {
+      setRightSideData(prev => ({ ...prev, backgroundImage: imageUrl }));
     } else if (imageKitTarget === 'slider') {
       setSliderImages(prev => [...prev, { id: Date.now() + Math.random(), url: imageUrl }]);
     }
     setImageKitTarget(null);
   };
 
-  const handleRightSideSave = () => {
-    setSavedRightSideData({ ...rightSideData });
-    console.log('Right Side Data Saved:', rightSideData);
-    // Add your API call here
+  const handleRightSideSave = async () => {
+    try {
+      setLoading(true);
+      setSaveStatus({ section: 'right', status: 'saving' });
+      
+      const docRef = doc(db, 'homepage', 'herosection');
+      const docSnap = await getDoc(docRef);
+      
+      const existingData = docSnap.exists() ? docSnap.data() : {};
+      
+      await setDoc(docRef, {
+        ...existingData,
+        rightside: rightSideData
+      });
+      
+      setSavedRightSideData({ ...rightSideData });
+      setSaveStatus({ section: 'right', status: 'success' });
+      setTimeout(() => setSaveStatus({ section: null, status: null }), 2000);
+      console.log('Right Side Data Saved to Firebase:', rightSideData);
+    } catch (error) {
+      console.error('Error saving right side data:', error);
+      setSaveStatus({ section: 'right', status: 'error' });
+      setTimeout(() => setSaveStatus({ section: null, status: null }), 2000);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleRightSideCancel = () => {
     if (savedRightSideData) {
       setRightSideData({ ...savedRightSideData });
     } else {
-      setRightSideData({ heading: '', image: null, buttonLabel: '' });
+      setRightSideData({ heading: '', image: null, buttonLabel: '', backgroundImage: null });
     }
   };
 
@@ -96,10 +207,34 @@ const HeroSection = () => {
     setSliderImages(prev => prev.filter(img => img.id !== id));
   };
 
-  const handleSliderSave = () => {
-    setSavedSliderImages([...sliderImages]);
-    console.log('Slider Images Saved:', sliderImages);
-    // Add your API call here
+  const handleSliderSave = async () => {
+    try {
+      setLoading(true);
+      setSaveStatus({ section: 'slider', status: 'saving' });
+      
+      const docRef = doc(db, 'homepage', 'herosection');
+      const docSnap = await getDoc(docRef);
+      
+      const existingData = docSnap.exists() ? docSnap.data() : {};
+      
+      await setDoc(docRef, {
+        ...existingData,
+        slider: {
+          images: sliderImages
+        }
+      });
+      
+      setSavedSliderImages([...sliderImages]);
+      setSaveStatus({ section: 'slider', status: 'success' });
+      setTimeout(() => setSaveStatus({ section: null, status: null }), 2000);
+      console.log('Slider Images Saved to Firebase:', sliderImages);
+    } catch (error) {
+      console.error('Error saving slider data:', error);
+      setSaveStatus({ section: 'slider', status: 'error' });
+      setTimeout(() => setSaveStatus({ section: null, status: null }), 2000);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleSliderCancel = () => {
@@ -159,9 +294,55 @@ const HeroSection = () => {
               />
             </div>
 
+            <div className="form-group">
+              <label className="form-label">Background Image</label>
+              <div className="image-upload-area">
+                {leftSideData.backgroundImage ? (
+                  <div className="image-selected-container">
+                    <div className="image-preview">
+                      <img src={leftSideData.backgroundImage} alt="Left side background preview" />
+                    </div>
+                    <div className="image-actions">
+                      <button 
+                        type="button"
+                        className="btn-change"
+                        onClick={() => openImageKitBrowser('leftSideBg')}
+                      >
+                        Change
+                      </button>
+                      <button 
+                        type="button"
+                        className="btn-remove"
+                        onClick={removeLeftSideBackgroundImage}
+                      >
+                        Remove
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  <button 
+                    type="button"
+                    className="choose-image-btn"
+                    onClick={() => openImageKitBrowser('leftSideBg')}
+                  >
+                    <Image size={24} />
+                    <span>Choose Background Image</span>
+                  </button>
+                )}
+              </div>
+            </div>
+
             <div className="section-actions">
               <button className="btn-cancel" onClick={handleLeftSideCancel}>Cancel</button>
-              <button className="btn-save" onClick={handleLeftSideSave}>Save</button>
+              <button className="btn-save" onClick={handleLeftSideSave} disabled={loading}>
+                {loading && saveStatus.section === 'left' ? 'Saving...' : 'Save'}
+              </button>
+              {saveStatus.section === 'left' && saveStatus.status === 'success' && (
+                <span className="save-success">✓ Saved successfully!</span>
+              )}
+              {saveStatus.section === 'left' && saveStatus.status === 'error' && (
+                <span className="save-error">✗ Error saving</span>
+              )}
             </div>
           </div>
         )}
@@ -239,9 +420,55 @@ const HeroSection = () => {
               />
             </div>
 
+            <div className="form-group">
+              <label className="form-label">Background Image</label>
+              <div className="image-upload-area">
+                {rightSideData.backgroundImage ? (
+                  <div className="image-selected-container">
+                    <div className="image-preview">
+                      <img src={rightSideData.backgroundImage} alt="Right side background preview" />
+                    </div>
+                    <div className="image-actions">
+                      <button 
+                        type="button"
+                        className="btn-change"
+                        onClick={() => openImageKitBrowser('rightSideBg')}
+                      >
+                        Change
+                      </button>
+                      <button 
+                        type="button"
+                        className="btn-remove"
+                        onClick={removeRightSideBackgroundImage}
+                      >
+                        Remove
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  <button 
+                    type="button"
+                    className="choose-image-btn"
+                    onClick={() => openImageKitBrowser('rightSideBg')}
+                  >
+                    <Image size={24} />
+                    <span>Choose Background Image</span>
+                  </button>
+                )}
+              </div>
+            </div>
+
             <div className="section-actions">
               <button className="btn-cancel" onClick={handleRightSideCancel}>Cancel</button>
-              <button className="btn-save" onClick={handleRightSideSave}>Save</button>
+              <button className="btn-save" onClick={handleRightSideSave} disabled={loading}>
+                {loading && saveStatus.section === 'right' ? 'Saving...' : 'Save'}
+              </button>
+              {saveStatus.section === 'right' && saveStatus.status === 'success' && (
+                <span className="save-success">✓ Saved successfully!</span>
+              )}
+              {saveStatus.section === 'right' && saveStatus.status === 'error' && (
+                <span className="save-error">✗ Error saving</span>
+              )}
             </div>
           </div>
         )}
@@ -308,7 +535,15 @@ const HeroSection = () => {
 
             <div className="section-actions">
               <button className="btn-cancel" onClick={handleSliderCancel}>Cancel</button>
-              <button className="btn-save" onClick={handleSliderSave}>Save</button>
+              <button className="btn-save" onClick={handleSliderSave} disabled={loading}>
+                {loading && saveStatus.section === 'slider' ? 'Saving...' : 'Save'}
+              </button>
+              {saveStatus.section === 'slider' && saveStatus.status === 'success' && (
+                <span className="save-success">✓ Saved successfully!</span>
+              )}
+              {saveStatus.section === 'slider' && saveStatus.status === 'error' && (
+                <span className="save-error">✗ Error saving</span>
+              )}
             </div>
           </div>
         )}

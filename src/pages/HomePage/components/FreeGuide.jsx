@@ -1,7 +1,12 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { doc, getDoc, setDoc } from 'firebase/firestore';
+import { db } from '../../../config/firebase';
 import './FreeGuide.css';
 
 const FreeGuide = () => {
+  const [loading, setLoading] = useState(false);
+  const [saveStatus, setSaveStatus] = useState({ section: null, status: null });
+  
   const [guideData, setGuideData] = useState({
     headingOne: '',
     headingTwo: '',
@@ -11,14 +16,64 @@ const FreeGuide = () => {
   });
   const [savedGuideData, setSavedGuideData] = useState(null);
 
+  // Load data from Firebase on component mount
+  useEffect(() => {
+    if (db) {
+      loadDataFromFirebase();
+    }
+  }, []);
+
+  const loadDataFromFirebase = async () => {
+    if (!db) {
+      console.error('Firebase not initialized');
+      return;
+    }
+    
+    try {
+      setLoading(true);
+      const docRef = doc(db, 'homepage', 'freeguide');
+      const docSnap = await getDoc(docRef);
+      
+      if (docSnap.exists()) {
+        const data = docSnap.data();
+        if (data.guideData) {
+          setGuideData(data.guideData);
+          setSavedGuideData(data.guideData);
+        }
+      }
+    } catch (error) {
+      console.error('Error loading data from Firebase:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleInputChange = (field, value) => {
     setGuideData(prev => ({ ...prev, [field]: value }));
   };
 
-  const handleSave = () => {
-    setSavedGuideData({ ...guideData });
-    console.log('Free Guide Data Saved:', guideData);
-    // Add your API call here
+  const handleSave = async () => {
+    try {
+      setLoading(true);
+      setSaveStatus({ section: 'guide', status: 'saving' });
+      
+      const docRef = doc(db, 'homepage', 'freeguide');
+      
+      await setDoc(docRef, {
+        guideData: guideData
+      });
+      
+      setSavedGuideData({ ...guideData });
+      setSaveStatus({ section: 'guide', status: 'success' });
+      setTimeout(() => setSaveStatus({ section: null, status: null }), 2000);
+      console.log('Free Guide Data Saved to Firebase:', guideData);
+    } catch (error) {
+      console.error('Error saving free guide data:', error);
+      setSaveStatus({ section: 'guide', status: 'error' });
+      setTimeout(() => setSaveStatus({ section: null, status: null }), 2000);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleCancel = () => {
@@ -97,8 +152,16 @@ const FreeGuide = () => {
           </div>
 
           <div className="section-actions">
-            <button className="btn-cancel" onClick={handleCancel}>Cancel</button>
-            <button className="btn-save" onClick={handleSave}>Save</button>
+            {saveStatus.section === 'guide' && saveStatus.status === 'success' && (
+              <span className="save-status success">Saved successfully!</span>
+            )}
+            {saveStatus.section === 'guide' && saveStatus.status === 'error' && (
+              <span className="save-status error">Error saving data</span>
+            )}
+            <button className="btn-cancel" onClick={handleCancel} disabled={loading}>Cancel</button>
+            <button className="btn-save" onClick={handleSave} disabled={loading}>
+              {loading && saveStatus.section === 'guide' ? 'Saving...' : 'Save'}
+            </button>
           </div>
         </div>
       </div>

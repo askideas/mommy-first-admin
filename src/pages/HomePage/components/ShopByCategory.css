@@ -114,6 +114,9 @@
   cursor: pointer;
   padding: 40px;
   color: #666;
+  background: transparent;
+  border: none;
+  width: 100%;
 }
 
 .upload-label svg {
@@ -127,6 +130,21 @@
 
 .upload-label:hover {
   color: #DC5F92;
+}
+
+/* Save Status */
+.save-status {
+  font-size: 13px;
+  font-weight: 500;
+  margin-right: auto;
+}
+
+.save-status.success {
+  color: #10b981;
+}
+
+.save-status.error {
+  color: #ef4444;
 }
 
 /* Image Preview */
@@ -209,6 +227,12 @@
 .btn-save:hover {
   transform: translateY(-1px);
   box-shadow: 0 4px 12px rgba(220, 95, 146, 0.3);
+}
+
+.btn-save:disabled,
+.btn-cancel:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
 }
 
 /* Responsive */

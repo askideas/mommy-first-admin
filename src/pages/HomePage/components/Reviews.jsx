@@ -1,8 +1,17 @@
-import { useState } from 'react';
-import { Upload, X } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { X, Image } from 'lucide-react';
+import { doc, getDoc, setDoc } from 'firebase/firestore';
+import { db } from '../../../config/firebase';
+import ImageKitBrowser from '../../../components/ImageKitBrowser';
 import './Reviews.css';
 
 const Reviews = () => {
+  const [loading, setLoading] = useState(false);
+  const [saveStatus, setSaveStatus] = useState({ section: null, status: null });
+  
+  // ImageKit Browser Modal State
+  const [isImageKitOpen, setIsImageKitOpen] = useState(false);
+  
   const [reviewData, setReviewData] = useState({
     heading: '',
     label: '',
@@ -13,22 +22,52 @@ const Reviews = () => {
   });
   const [savedReviewData, setSavedReviewData] = useState(null);
 
+  // Load data from Firebase on component mount
+  useEffect(() => {
+    if (db) {
+      loadDataFromFirebase();
+    }
+  }, []);
+
+  const loadDataFromFirebase = async () => {
+    if (!db) {
+      console.error('Firebase not initialized');
+      return;
+    }
+    
+    try {
+      setLoading(true);
+      const docRef = doc(db, 'homepage', 'reviews');
+      const docSnap = await getDoc(docRef);
+      
+      if (docSnap.exists()) {
+        const data = docSnap.data();
+        if (data.reviewData) {
+          setReviewData(data.reviewData);
+          setSavedReviewData(data.reviewData);
+        }
+      }
+    } catch (error) {
+      console.error('Error loading data from Firebase:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleInputChange = (field, value) => {
     setReviewData(prev => ({ ...prev, [field]: value }));
   };
 
-  const handleMultipleImageUpload = (e) => {
-    const files = Array.from(e.target.files);
-    files.forEach(file => {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setReviewData(prev => ({
-          ...prev,
-          images: [...prev.images, { id: Date.now() + Math.random(), url: reader.result, name: file.name }]
-        }));
-      };
-      reader.readAsDataURL(file);
-    });
+  // ImageKit Browser Handlers
+  const openImageKitBrowser = () => {
+    setIsImageKitOpen(true);
+  };
+
+  const handleImageKitSelect = (imageUrl) => {
+    setReviewData(prev => ({
+      ...prev,
+      images: [...prev.images, { id: Date.now() + Math.random(), url: imageUrl }]
+    }));
   };
 
   const removeImage = (id) => {
@@ -38,10 +77,28 @@ const Reviews = () => {
     }));
   };
 
-  const handleSave = () => {
-    setSavedReviewData({ ...reviewData });
-    console.log('Reviews Data Saved:', reviewData);
-    // Add your API call here
+  const handleSave = async () => {
+    try {
+      setLoading(true);
+      setSaveStatus({ section: 'reviews', status: 'saving' });
+      
+      const docRef = doc(db, 'homepage', 'reviews');
+      
+      await setDoc(docRef, {
+        reviewData: reviewData
+      });
+      
+      setSavedReviewData({ ...reviewData });
+      setSaveStatus({ section: 'reviews', status: 'success' });
+      setTimeout(() => setSaveStatus({ section: null, status: null }), 2000);
+      console.log('Reviews Data Saved to Firebase:', reviewData);
+    } catch (error) {
+      console.error('Error saving reviews data:', error);
+      setSaveStatus({ section: 'reviews', status: 'error' });
+      setTimeout(() => setSaveStatus({ section: null, status: null }), 2000);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleCancel = () => {
@@ -123,23 +180,16 @@ const Reviews = () => {
           <div className="form-group">
             <label className="form-label">Images</label>
             
-            <label className="upload-button">
-              <Upload size={18} />
-              <span>Upload Images</span>
-              <input
-                type="file"
-                accept="image/*"
-                multiple
-                onChange={handleMultipleImageUpload}
-                style={{ display: 'none' }}
-              />
-            </label>
+            <button className="upload-button" onClick={openImageKitBrowser}>
+              <Image size={18} />
+              <span>Browse ImageKit</span>
+            </button>
 
             {reviewData.images.length > 0 && (
               <div className="images-grid">
                 {reviewData.images.map((image) => (
                   <div key={image.id} className="image-item">
-                    <img src={image.url} alt={image.name} />
+                    <img src={image.url} alt="Review" />
                     <button 
                       className="remove-image-btn"
                       onClick={() => removeImage(image.id)}
@@ -157,11 +207,26 @@ const Reviews = () => {
           </div>
 
           <div className="section-actions">
-            <button className="btn-cancel" onClick={handleCancel}>Cancel</button>
-            <button className="btn-save" onClick={handleSave}>Save</button>
+            {saveStatus.section === 'reviews' && saveStatus.status === 'success' && (
+              <span className="save-status success">Saved successfully!</span>
+            )}
+            {saveStatus.section === 'reviews' && saveStatus.status === 'error' && (
+              <span className="save-status error">Error saving data</span>
+            )}
+            <button className="btn-cancel" onClick={handleCancel} disabled={loading}>Cancel</button>
+            <button className="btn-save" onClick={handleSave} disabled={loading}>
+              {loading && saveStatus.section === 'reviews' ? 'Saving...' : 'Save'}
+            </button>
           </div>
         </div>
       </div>
+
+      {/* ImageKit Browser Modal */}
+      <ImageKitBrowser
+        isOpen={isImageKitOpen}
+        onClose={() => setIsImageKitOpen(false)}
+        onSelect={handleImageKitSelect}
+      />
     </div>
   );
 };

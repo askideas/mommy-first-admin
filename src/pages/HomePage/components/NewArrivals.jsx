@@ -1,9 +1,13 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Plus, X, ChevronDown, ChevronUp } from 'lucide-react';
+import { doc, getDoc, setDoc } from 'firebase/firestore';
+import { db } from '../../../config/firebase';
 import './NewArrivals.css';
 
 const NewArrivals = () => {
   const [expandedSection, setExpandedSection] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [saveStatus, setSaveStatus] = useState({ section: null, status: null });
   
   // Heading Section State
   const [headingData, setHeadingData] = useState({
@@ -17,6 +21,44 @@ const NewArrivals = () => {
   const [collections, setCollections] = useState([]);
   const [savedCollections, setSavedCollections] = useState([]);
 
+  // Load data from Firebase on component mount
+  useEffect(() => {
+    if (db) {
+      loadDataFromFirebase();
+    }
+  }, []);
+
+  const loadDataFromFirebase = async () => {
+    if (!db) {
+      console.error('Firebase not initialized');
+      return;
+    }
+    
+    try {
+      setLoading(true);
+      const docRef = doc(db, 'homepage', 'newarrivals');
+      const docSnap = await getDoc(docRef);
+      
+      if (docSnap.exists()) {
+        const data = docSnap.data();
+        
+        if (data.heading) {
+          setHeadingData(data.heading);
+          setSavedHeadingData(data.heading);
+        }
+        
+        if (data.collections) {
+          setCollections(data.collections);
+          setSavedCollections(data.collections);
+        }
+      }
+    } catch (error) {
+      console.error('Error loading data from Firebase:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const toggleSection = (section) => {
     setExpandedSection(expandedSection === section ? null : section);
   };
@@ -26,10 +68,31 @@ const NewArrivals = () => {
     setHeadingData(prev => ({ ...prev, [field]: value }));
   };
 
-  const handleHeadingSave = () => {
-    setSavedHeadingData({ ...headingData });
-    console.log('Heading Data Saved:', headingData);
-    // Add your API call here
+  const handleHeadingSave = async () => {
+    try {
+      setLoading(true);
+      setSaveStatus({ section: 'heading', status: 'saving' });
+      
+      const docRef = doc(db, 'homepage', 'newarrivals');
+      const docSnap = await getDoc(docRef);
+      const existingData = docSnap.exists() ? docSnap.data() : {};
+      
+      await setDoc(docRef, {
+        ...existingData,
+        heading: headingData
+      });
+      
+      setSavedHeadingData({ ...headingData });
+      setSaveStatus({ section: 'heading', status: 'success' });
+      setTimeout(() => setSaveStatus({ section: null, status: null }), 2000);
+      console.log('Heading Data Saved to Firebase:', headingData);
+    } catch (error) {
+      console.error('Error saving heading data:', error);
+      setSaveStatus({ section: 'heading', status: 'error' });
+      setTimeout(() => setSaveStatus({ section: null, status: null }), 2000);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleHeadingCancel = () => {
@@ -60,10 +123,31 @@ const NewArrivals = () => {
     ));
   };
 
-  const handleCollectionsSave = () => {
-    setSavedCollections([...collections]);
-    console.log('New Arrivals Collections Saved:', collections);
-    // Add your API call here
+  const handleCollectionsSave = async () => {
+    try {
+      setLoading(true);
+      setSaveStatus({ section: 'collections', status: 'saving' });
+      
+      const docRef = doc(db, 'homepage', 'newarrivals');
+      const docSnap = await getDoc(docRef);
+      const existingData = docSnap.exists() ? docSnap.data() : {};
+      
+      await setDoc(docRef, {
+        ...existingData,
+        collections: collections
+      });
+      
+      setSavedCollections([...collections]);
+      setSaveStatus({ section: 'collections', status: 'success' });
+      setTimeout(() => setSaveStatus({ section: null, status: null }), 2000);
+      console.log('Collections Saved to Firebase:', collections);
+    } catch (error) {
+      console.error('Error saving collections:', error);
+      setSaveStatus({ section: 'collections', status: 'error' });
+      setTimeout(() => setSaveStatus({ section: null, status: null }), 2000);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleCollectionsCancel = () => {
@@ -124,8 +208,16 @@ const NewArrivals = () => {
             </div>
 
             <div className="section-actions">
-              <button className="btn-cancel" onClick={handleHeadingCancel}>Cancel</button>
-              <button className="btn-save" onClick={handleHeadingSave}>Save</button>
+              {saveStatus.section === 'heading' && saveStatus.status === 'success' && (
+                <span className="save-status success">Saved successfully!</span>
+              )}
+              {saveStatus.section === 'heading' && saveStatus.status === 'error' && (
+                <span className="save-status error">Error saving data</span>
+              )}
+              <button className="btn-cancel" onClick={handleHeadingCancel} disabled={loading}>Cancel</button>
+              <button className="btn-save" onClick={handleHeadingSave} disabled={loading}>
+                {loading && saveStatus.section === 'heading' ? 'Saving...' : 'Save'}
+              </button>
             </div>
           </div>
         )}
@@ -189,8 +281,16 @@ const NewArrivals = () => {
           )}
 
           <div className="section-actions">
-            <button className="btn-cancel" onClick={handleCollectionsCancel}>Cancel</button>
-            <button className="btn-save" onClick={handleCollectionsSave}>Save</button>
+            {saveStatus.section === 'collections' && saveStatus.status === 'success' && (
+              <span className="save-status success">Saved successfully!</span>
+            )}
+            {saveStatus.section === 'collections' && saveStatus.status === 'error' && (
+              <span className="save-status error">Error saving data</span>
+            )}
+            <button className="btn-cancel" onClick={handleCollectionsCancel} disabled={loading}>Cancel</button>
+            <button className="btn-save" onClick={handleCollectionsSave} disabled={loading}>
+              {loading && saveStatus.section === 'collections' ? 'Saving...' : 'Save'}
+            </button>
           </div>
         </div>
       </div>

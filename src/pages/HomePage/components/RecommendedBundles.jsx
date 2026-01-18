@@ -1,9 +1,17 @@
-import { useState } from 'react';
-import { ChevronDown, ChevronUp, Upload, X } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { ChevronDown, ChevronUp, X, Image } from 'lucide-react';
+import { doc, getDoc, setDoc } from 'firebase/firestore';
+import { db } from '../../../config/firebase';
+import ImageKitBrowser from '../../../components/ImageKitBrowser';
 import './RecommendedBundles.css';
 
 const RecommendedBundles = () => {
   const [expandedSection, setExpandedSection] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [saveStatus, setSaveStatus] = useState({ section: null, status: null });
+  
+  // ImageKit Browser Modal State
+  const [isImageKitOpen, setIsImageKitOpen] = useState(false);
   
   // Heading Section State
   const [headingData, setHeadingData] = useState({
@@ -31,8 +39,60 @@ const RecommendedBundles = () => {
   });
   const [savedContentData, setSavedContentData] = useState(null);
 
+  // Load data from Firebase on component mount
+  useEffect(() => {
+    if (db) {
+      loadDataFromFirebase();
+    }
+  }, []);
+
+  const loadDataFromFirebase = async () => {
+    if (!db) {
+      console.error('Firebase not initialized');
+      return;
+    }
+    
+    try {
+      setLoading(true);
+      const docRef = doc(db, 'homepage', 'recommendedbundles');
+      const docSnap = await getDoc(docRef);
+      
+      if (docSnap.exists()) {
+        const data = docSnap.data();
+        
+        if (data.heading) {
+          setHeadingData(data.heading);
+          setSavedHeadingData(data.heading);
+        }
+        
+        if (data.image) {
+          setImageData(data.image);
+          setSavedImageData(data.image);
+        }
+        
+        if (data.content) {
+          setContentData(data.content);
+          setSavedContentData(data.content);
+        }
+      }
+    } catch (error) {
+      console.error('Error loading data from Firebase:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const toggleSection = (section) => {
     setExpandedSection(expandedSection === section ? null : section);
+  };
+
+  // ImageKit Browser Handlers
+  const openImageKitBrowser = () => {
+    setIsImageKitOpen(true);
+  };
+
+  const handleImageKitSelect = (imageUrl) => {
+    setImageData({ image: imageUrl });
   };
 
   // Heading Section Handlers
@@ -40,10 +100,31 @@ const RecommendedBundles = () => {
     setHeadingData(prev => ({ ...prev, [field]: value }));
   };
 
-  const handleHeadingSave = () => {
-    setSavedHeadingData({ ...headingData });
-    console.log('Heading Data Saved:', headingData);
-    // Add your API call here
+  const handleHeadingSave = async () => {
+    try {
+      setLoading(true);
+      setSaveStatus({ section: 'heading', status: 'saving' });
+      
+      const docRef = doc(db, 'homepage', 'recommendedbundles');
+      const docSnap = await getDoc(docRef);
+      const existingData = docSnap.exists() ? docSnap.data() : {};
+      
+      await setDoc(docRef, {
+        ...existingData,
+        heading: headingData
+      });
+      
+      setSavedHeadingData({ ...headingData });
+      setSaveStatus({ section: 'heading', status: 'success' });
+      setTimeout(() => setSaveStatus({ section: null, status: null }), 2000);
+      console.log('Heading Data Saved to Firebase:', headingData);
+    } catch (error) {
+      console.error('Error saving heading data:', error);
+      setSaveStatus({ section: 'heading', status: 'error' });
+      setTimeout(() => setSaveStatus({ section: null, status: null }), 2000);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleHeadingCancel = () => {
@@ -55,25 +136,35 @@ const RecommendedBundles = () => {
   };
 
   // Image Section Handlers
-  const handleImageUpload = (e) => {
-    const file = e.target.files[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setImageData({ image: reader.result });
-      };
-      reader.readAsDataURL(file);
-    }
-  };
-
   const removeImage = () => {
     setImageData({ image: null });
   };
 
-  const handleImageSave = () => {
-    setSavedImageData({ ...imageData });
-    console.log('Image Data Saved:', imageData);
-    // Add your API call here
+  const handleImageSave = async () => {
+    try {
+      setLoading(true);
+      setSaveStatus({ section: 'image', status: 'saving' });
+      
+      const docRef = doc(db, 'homepage', 'recommendedbundles');
+      const docSnap = await getDoc(docRef);
+      const existingData = docSnap.exists() ? docSnap.data() : {};
+      
+      await setDoc(docRef, {
+        ...existingData,
+        image: imageData
+      });
+      
+      setSavedImageData({ ...imageData });
+      setSaveStatus({ section: 'image', status: 'success' });
+      setTimeout(() => setSaveStatus({ section: null, status: null }), 2000);
+      console.log('Image Data Saved to Firebase:', imageData);
+    } catch (error) {
+      console.error('Error saving image data:', error);
+      setSaveStatus({ section: 'image', status: 'error' });
+      setTimeout(() => setSaveStatus({ section: null, status: null }), 2000);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleImageCancel = () => {
@@ -98,10 +189,31 @@ const RecommendedBundles = () => {
     }));
   };
 
-  const handleContentSave = () => {
-    setSavedContentData({ ...contentData });
-    console.log('Content Data Saved:', contentData);
-    // Add your API call here
+  const handleContentSave = async () => {
+    try {
+      setLoading(true);
+      setSaveStatus({ section: 'content', status: 'saving' });
+      
+      const docRef = doc(db, 'homepage', 'recommendedbundles');
+      const docSnap = await getDoc(docRef);
+      const existingData = docSnap.exists() ? docSnap.data() : {};
+      
+      await setDoc(docRef, {
+        ...existingData,
+        content: contentData
+      });
+      
+      setSavedContentData({ ...contentData });
+      setSaveStatus({ section: 'content', status: 'success' });
+      setTimeout(() => setSaveStatus({ section: null, status: null }), 2000);
+      console.log('Content Data Saved to Firebase:', contentData);
+    } catch (error) {
+      console.error('Error saving content data:', error);
+      setSaveStatus({ section: 'content', status: 'error' });
+      setTimeout(() => setSaveStatus({ section: null, status: null }), 2000);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleContentCancel = () => {
@@ -170,8 +282,16 @@ const RecommendedBundles = () => {
             </div>
 
             <div className="section-actions">
-              <button className="btn-cancel" onClick={handleHeadingCancel}>Cancel</button>
-              <button className="btn-save" onClick={handleHeadingSave}>Save</button>
+              {saveStatus.section === 'heading' && saveStatus.status === 'success' && (
+                <span className="save-status success">Saved successfully!</span>
+              )}
+              {saveStatus.section === 'heading' && saveStatus.status === 'error' && (
+                <span className="save-status error">Error saving data</span>
+              )}
+              <button className="btn-cancel" onClick={handleHeadingCancel} disabled={loading}>Cancel</button>
+              <button className="btn-save" onClick={handleHeadingSave} disabled={loading}>
+                {loading && saveStatus.section === 'heading' ? 'Saving...' : 'Save'}
+              </button>
             </div>
           </div>
         )}
@@ -203,23 +323,25 @@ const RecommendedBundles = () => {
                     </button>
                   </div>
                 ) : (
-                  <label className="upload-label">
-                    <Upload size={24} />
-                    <span>Click to upload image</span>
-                    <input
-                      type="file"
-                      accept="image/*"
-                      onChange={handleImageUpload}
-                      style={{ display: 'none' }}
-                    />
-                  </label>
+                  <button className="upload-label" onClick={openImageKitBrowser}>
+                    <Image size={24} />
+                    <span>Browse ImageKit</span>
+                  </button>
                 )}
               </div>
             </div>
 
             <div className="section-actions">
-              <button className="btn-cancel" onClick={handleImageCancel}>Cancel</button>
-              <button className="btn-save" onClick={handleImageSave}>Save</button>
+              {saveStatus.section === 'image' && saveStatus.status === 'success' && (
+                <span className="save-status success">Saved successfully!</span>
+              )}
+              {saveStatus.section === 'image' && saveStatus.status === 'error' && (
+                <span className="save-status error">Error saving data</span>
+              )}
+              <button className="btn-cancel" onClick={handleImageCancel} disabled={loading}>Cancel</button>
+              <button className="btn-save" onClick={handleImageSave} disabled={loading}>
+                {loading && saveStatus.section === 'image' ? 'Saving...' : 'Save'}
+              </button>
             </div>
           </div>
         )}
@@ -280,12 +402,27 @@ const RecommendedBundles = () => {
             </div>
 
             <div className="section-actions">
-              <button className="btn-cancel" onClick={handleContentCancel}>Cancel</button>
-              <button className="btn-save" onClick={handleContentSave}>Save</button>
+              {saveStatus.section === 'content' && saveStatus.status === 'success' && (
+                <span className="save-status success">Saved successfully!</span>
+              )}
+              {saveStatus.section === 'content' && saveStatus.status === 'error' && (
+                <span className="save-status error">Error saving data</span>
+              )}
+              <button className="btn-cancel" onClick={handleContentCancel} disabled={loading}>Cancel</button>
+              <button className="btn-save" onClick={handleContentSave} disabled={loading}>
+                {loading && saveStatus.section === 'content' ? 'Saving...' : 'Save'}
+              </button>
             </div>
           </div>
         )}
       </div>
+
+      {/* ImageKit Browser Modal */}
+      <ImageKitBrowser
+        isOpen={isImageKitOpen}
+        onClose={() => setIsImageKitOpen(false)}
+        onSelect={handleImageKitSelect}
+      />
     </div>
   );
 };
