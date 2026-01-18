@@ -99,6 +99,8 @@
   justify-content: center;
   background: white;
   transition: all 0.2s;
+  overflow: visible;
+  position: relative;
 }
 
 .image-upload-area:hover {
@@ -106,7 +108,7 @@
   background: rgba(220, 95, 146, 0.02);
 }
 
-.upload-label {
+.choose-image-btn {
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -119,17 +121,84 @@
   width: 100%;
 }
 
-.upload-label svg {
+.choose-image-btn svg {
   color: #DC5F92;
 }
 
-.upload-label span {
+.choose-image-btn span {
   font-size: 13px;
   font-weight: 500;
 }
 
-.upload-label:hover {
+.choose-image-btn:hover {
   color: #DC5F92;
+}
+
+/* Image Selected Container */
+.image-selected-container {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+/* Image Preview */
+.image-preview {
+  position: relative;
+  width: 100%;
+  max-width: 400px;
+  border-radius: 8px;
+  overflow: visible;
+  margin: 0 auto;
+}
+
+.image-preview img {
+  width: 100%;
+  height: auto;
+  display: block;
+  border-radius: 8px;
+}
+
+/* Image Actions */
+.image-actions {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+  padding: 10px 0;
+}
+
+.btn-change,
+.btn-remove {
+  padding: 8px 20px;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+  border: none;
+}
+
+.btn-change {
+  background: linear-gradient(218.44deg, #FD8CBB 4.36%, #DC5F92 86.2%);
+  color: white;
+}
+
+.btn-change:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(220, 95, 146, 0.3);
+}
+
+.btn-remove {
+  background: white;
+  color: #ef4444;
+  border: 1px solid #ef4444;
+}
+
+.btn-remove:hover {
+  background: #ef4444;
+  color: white;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
 }
 
 /* Save Status */
@@ -145,43 +214,6 @@
 
 .save-status.error {
   color: #ef4444;
-}
-
-/* Image Preview */
-.image-preview {
-  position: relative;
-  width: 100%;
-  max-width: 400px;
-  border-radius: 8px;
-  overflow: hidden;
-}
-
-.image-preview img {
-  width: 100%;
-  height: auto;
-  display: block;
-}
-
-.remove-image-btn {
-  position: absolute;
-  top: 8px;
-  right: 8px;
-  background: rgba(239, 68, 68, 0.9);
-  color: white;
-  border: none;
-  border-radius: 50%;
-  width: 28px;
-  height: 28px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  transition: all 0.2s;
-}
-
-.remove-image-btn:hover {
-  background: #ef4444;
-  transform: scale(1.1);
 }
 
 /* Section Actions */

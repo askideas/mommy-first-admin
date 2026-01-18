@@ -258,19 +258,42 @@ const ShopByCategory = () => {
               <label className="form-label">Image</label>
               <div className="image-upload-area">
                 {data.image ? (
-                  <div className="image-preview">
-                    <img src={data.image} alt={`Category ${categoryNum}`} />
-                    <button 
-                      className="remove-image-btn"
-                      onClick={removeImage}
-                    >
-                      <X size={16} />
-                    </button>
+                  <div className="image-selected-container">
+                    <div className="image-preview">
+                      <img src={data.image} alt={`Category ${categoryNum}`} />
+                    </div>
+                    <div className="image-actions">
+                      <button 
+                        type="button"
+                        className="btn-change"
+                        onClick={() => {
+                          console.log('Change image clicked for category', categoryNum);
+                          openImageKitBrowser(`category${categoryNum}`);
+                        }}
+                      >
+                        Change
+                      </button>
+                      <button 
+                        type="button"
+                        className="btn-remove"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          console.log('Remove image clicked for category', categoryNum);
+                          removeImage();
+                        }}
+                      >
+                        Remove
+                      </button>
+                    </div>
                   </div>
                 ) : (
-                  <button className="upload-label" onClick={() => openImageKitBrowser(`category${categoryNum}`)}>
+                  <button 
+                    type="button"
+                    className="choose-image-btn" 
+                    onClick={() => openImageKitBrowser(`category${categoryNum}`)}
+                  >
                     <Image size={24} />
-                    <span>Browse ImageKit</span>
+                    <span>Choose Image</span>
                   </button>
                 )}
               </div>
