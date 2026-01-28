@@ -1,5 +1,7 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Plus, Save, Edit, Trash2, X } from 'lucide-react';
+import { doc, getDoc, setDoc } from 'firebase/firestore';
+import { db } from '../../config/firebase';
 import './FaqsSlider.css';
 
 const FaqsSlider = () => {
@@ -11,6 +13,66 @@ const FaqsSlider = () => {
     answer: '',
     status: 'active'
   });
+  const [loading, setLoading] = useState(false);
+  const [saveStatus, setSaveStatus] = useState(null);
+
+  // Load data from Firebase on component mount
+  useEffect(() => {
+    if (db) {
+      loadDataFromFirebase();
+    }
+  }, []);
+
+  const loadDataFromFirebase = async () => {
+    if (!db) {
+      console.error('Firebase not initialized');
+      return;
+    }
+    
+    try {
+      setLoading(true);
+      const docRef = doc(db, 'faqsSlider', 'faqs');
+      const docSnap = await getDoc(docRef);
+      
+      if (docSnap.exists()) {
+        const data = docSnap.data();
+        setFaqs(data.faqs || []);
+        console.log('FAQs loaded from Firebase:', data.faqs);
+      }
+    } catch (error) {
+      console.error('Error loading FAQs from Firebase:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const saveToFirebase = async (updatedFaqs) => {
+    if (!db) {
+      console.error('Firebase not initialized');
+      return;
+    }
+    
+    try {
+      setLoading(true);
+      setSaveStatus('saving');
+      const docRef = doc(db, 'faqsSlider', 'faqs');
+      
+      await setDoc(docRef, {
+        faqs: updatedFaqs,
+        lastUpdated: new Date().toISOString()
+      });
+      
+      setSaveStatus('success');
+      setTimeout(() => setSaveStatus(null), 2000);
+      console.log('FAQs saved to Firebase:', updatedFaqs);
+    } catch (error) {
+      console.error('Error saving FAQs to Firebase:', error);
+      setSaveStatus('error');
+      setTimeout(() => setSaveStatus(null), 2000);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleAddFaqClick = () => {
     setShowFaqForm(true);
@@ -18,19 +80,22 @@ const FaqsSlider = () => {
     setFaqForm({ question: '', answer: '', status: 'active' });
   };
 
-  const handleSaveFaq = () => {
+  const handleSaveFaq = async () => {
     if (!faqForm.question || !faqForm.answer) {
       alert('Please fill in all fields');
       return;
     }
 
+    let updatedFaqs;
     if (editingFaq !== null) {
-      const updatedFaqs = [...faqs];
+      updatedFaqs = [...faqs];
       updatedFaqs[editingFaq] = { ...faqForm };
-      setFaqs(updatedFaqs);
     } else {
-      setFaqs([...faqs, { ...faqForm }]);
+      updatedFaqs = [...faqs, { ...faqForm }];
     }
+    
+    setFaqs(updatedFaqs);
+    await saveToFirebase(updatedFaqs);
 
     setShowFaqForm(false);
     setFaqForm({ question: '', answer: '', status: 'active' });
@@ -43,9 +108,11 @@ const FaqsSlider = () => {
     setShowFaqForm(true);
   };
 
-  const handleDeleteFaq = (index) => {
+  const handleDeleteFaq = async (index) => {
     if (window.confirm('Are you sure you want to delete this FAQ?')) {
-      setFaqs(faqs.filter((_, i) => i !== index));
+      const updatedFaqs = faqs.filter((_, i) => i !== index);
+      setFaqs(updatedFaqs);
+      await saveToFirebase(updatedFaqs);
     }
   };
 
@@ -119,19 +186,29 @@ const FaqsSlider = () => {
             </div>
 
             <div className="form-actions">
-              <button className="cancel-button" onClick={handleCancelFaq}>
+              {saveStatus === 'success' && (
+                <span className="save-status success">Saved successfully!</span>
+              )}
+              {saveStatus === 'error' && (
+                <span className="save-status error">Error saving data</span>
+              )}
+              <button className="cancel-button" onClick={handleCancelFaq} disabled={loading}>
                 Cancel
               </button>
-              <button className="save-button" onClick={handleSaveFaq}>
+              <button className="save-button" onClick={handleSaveFaq} disabled={loading}>
                 <Save size={16} />
-                <span>Save FAQ</span>
+                <span>{loading ? 'Saving...' : 'Save FAQ'}</span>
               </button>
             </div>
           </div>
         )}
 
         <div className="faqs-list">
-          {faqs.length === 0 ? (
+          {loading && faqs.length === 0 ? (
+            <div className="empty-state">
+              <p>Loading FAQs...</p>
+            </div>
+          ) : faqs.length === 0 ? (
             <div className="empty-state">
               <p>No FAQs added yet. Click "Add FAQ" to create one.</p>
             </div>

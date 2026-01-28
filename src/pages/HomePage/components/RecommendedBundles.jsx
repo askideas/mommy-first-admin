@@ -10,6 +10,10 @@ const RecommendedBundles = () => {
   const [loading, setLoading] = useState(false);
   const [saveStatus, setSaveStatus] = useState({ section: null, status: null });
   
+  // Enable/Disable State
+  const [isEnabled, setIsEnabled] = useState(true);
+  const [savedIsEnabled, setSavedIsEnabled] = useState(true);
+  
   // ImageKit Browser Modal State
   const [isImageKitOpen, setIsImageKitOpen] = useState(false);
   
@@ -60,6 +64,11 @@ const RecommendedBundles = () => {
       if (docSnap.exists()) {
         const data = docSnap.data();
         
+        if (data.isEnabled !== undefined) {
+          setIsEnabled(data.isEnabled);
+          setSavedIsEnabled(data.isEnabled);
+        }
+        
         if (data.heading) {
           setHeadingData(data.heading);
           setSavedHeadingData(data.heading);
@@ -84,6 +93,26 @@ const RecommendedBundles = () => {
 
   const toggleSection = (section) => {
     setExpandedSection(expandedSection === section ? null : section);
+  };
+
+  const handleEnableToggle = async (newState) => {
+    setIsEnabled(newState);
+    try {
+      const docRef = doc(db, 'homepage', 'recommendedbundles');
+      const docSnap = await getDoc(docRef);
+      const existingData = docSnap.exists() ? docSnap.data() : {};
+      
+      await setDoc(docRef, {
+        ...existingData,
+        isEnabled: newState
+      });
+      
+      setSavedIsEnabled(newState);
+      console.log('Recommended Bundles enabled state:', newState);
+    } catch (error) {
+      console.error('Error saving enabled state:', error);
+      setIsEnabled(!newState);
+    }
   };
 
   // ImageKit Browser Handlers
@@ -239,7 +268,20 @@ const RecommendedBundles = () => {
 
   return (
     <div className="recommended-bundles-container">
-      <h2 className="section-main-title">Recommended Bundles Configuration</h2>
+      <div className="section-header-row">
+        <h2 className="section-main-title">Recommended Bundles Configuration</h2>
+        <div className="enable-toggle">
+          <label className="toggle-label">
+            <input
+              type="checkbox"
+              checked={isEnabled}
+              onChange={(e) => handleEnableToggle(e.target.checked)}
+              className="toggle-checkbox"
+            />
+            <span className="toggle-text">{isEnabled ? 'Enabled' : 'Disabled'}</span>
+          </label>
+        </div>
+      </div>
 
       {/* Heading Section */}
       <div className="config-section">

@@ -161,8 +161,23 @@
 .form-actions {
   display: flex;
   gap: 8px;
+  align-items: center;
   justify-content: flex-end;
   margin-top: 16px;
+}
+
+.save-status {
+  font-size: 13px;
+  font-weight: 500;
+  margin-right: auto;
+}
+
+.save-status.success {
+  color: #10b981;
+}
+
+.save-status.error {
+  color: #ef4444;
 }
 
 .cancel-button {
@@ -177,7 +192,7 @@
   transition: all 0.2s;
 }
 
-.cancel-button:hover {
+.cancel-button:hover:not(:disabled) {
   background: #fafafa;
   border-color: #DC5F92;
   color: #DC5F92;
@@ -198,9 +213,15 @@
   transition: all 0.2s;
 }
 
-.save-button:hover {
+.save-button:hover:not(:disabled) {
   transform: translateY(-1px);
   box-shadow: 0 2px 8px rgba(220, 95, 146, 0.2);
+}
+
+.cancel-button:disabled,
+.save-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
 }
 
 /* FAQs List */

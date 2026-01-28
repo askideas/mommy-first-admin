@@ -9,6 +9,10 @@ const SeeHowItWorks = () => {
   const [loading, setLoading] = useState(false);
   const [saveStatus, setSaveStatus] = useState({ section: null, status: null });
   
+  // Enable/Disable State
+  const [isEnabled, setIsEnabled] = useState(true);
+  const [savedIsEnabled, setSavedIsEnabled] = useState(true);
+  
   // Heading Section State
   const [headingData, setHeadingData] = useState({
     heading: '',
@@ -42,6 +46,11 @@ const SeeHowItWorks = () => {
       if (docSnap.exists()) {
         const data = docSnap.data();
         
+        if (data.isEnabled !== undefined) {
+          setIsEnabled(data.isEnabled);
+          setSavedIsEnabled(data.isEnabled);
+        }
+        
         if (data.heading) {
           setHeadingData(data.heading);
           setSavedHeadingData(data.heading);
@@ -61,6 +70,26 @@ const SeeHowItWorks = () => {
 
   const toggleSection = (section) => {
     setExpandedSection(expandedSection === section ? null : section);
+  };
+
+  const handleEnableToggle = async (newState) => {
+    setIsEnabled(newState);
+    try {
+      const docRef = doc(db, 'homepage', 'seehowworks');
+      const docSnap = await getDoc(docRef);
+      const existingData = docSnap.exists() ? docSnap.data() : {};
+      
+      await setDoc(docRef, {
+        ...existingData,
+        isEnabled: newState
+      });
+      
+      setSavedIsEnabled(newState);
+      console.log('See How It Works enabled state:', newState);
+    } catch (error) {
+      console.error('Error saving enabled state:', error);
+      setIsEnabled(!newState);
+    }
   };
 
   // Heading Section Handlers
@@ -180,7 +209,20 @@ const SeeHowItWorks = () => {
 
   return (
     <div className="see-how-it-works-container">
-      <h2 className="section-main-title">See How It Works Configuration</h2>
+      <div className="section-header-row">
+        <h2 className="section-main-title">See How It Works Configuration</h2>
+        <div className="enable-toggle">
+          <label className="toggle-label">
+            <input
+              type="checkbox"
+              checked={isEnabled}
+              onChange={(e) => handleEnableToggle(e.target.checked)}
+              className="toggle-checkbox"
+            />
+            <span className="toggle-text">{isEnabled ? 'Enabled' : 'Disabled'}</span>
+          </label>
+        </div>
+      </div>
 
       {/* Heading Section */}
       <div className="config-section">

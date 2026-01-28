@@ -10,6 +10,18 @@ const ShopByCategory = () => {
   const [loading, setLoading] = useState(false);
   const [saveStatus, setSaveStatus] = useState({ section: null, status: null });
   
+  // Enable/Disable State
+  const [isEnabled, setIsEnabled] = useState(true);
+  const [savedIsEnabled, setSavedIsEnabled] = useState(true);
+  
+  // Heading Section State
+  const [headingData, setHeadingData] = useState({
+    heading: '',
+    subheading: '',
+    description: ''
+  });
+  const [savedHeadingData, setSavedHeadingData] = useState(null);
+  
   // ImageKit Browser Modal State
   const [isImageKitOpen, setIsImageKitOpen] = useState(false);
   const [imageKitTarget, setImageKitTarget] = useState(null);
@@ -65,6 +77,16 @@ const ShopByCategory = () => {
       if (docSnap.exists()) {
         const data = docSnap.data();
         
+        if (data.isEnabled !== undefined) {
+          setIsEnabled(data.isEnabled);
+          setSavedIsEnabled(data.isEnabled);
+        }
+        
+        if (data.heading) {
+          setHeadingData(data.heading);
+          setSavedHeadingData(data.heading);
+        }
+        
         if (data.category1) {
           setCategory1Data(data.category1);
           setSavedCategory1Data(data.category1);
@@ -89,6 +111,65 @@ const ShopByCategory = () => {
 
   const toggleSection = (section) => {
     setExpandedSection(expandedSection === section ? null : section);
+  };
+
+  const handleEnableToggle = async (newState) => {
+    setIsEnabled(newState);
+    try {
+      const docRef = doc(db, 'homepage', 'shopbycategory');
+      const docSnap = await getDoc(docRef);
+      const existingData = docSnap.exists() ? docSnap.data() : {};
+      
+      await setDoc(docRef, {
+        ...existingData,
+        isEnabled: newState
+      });
+      
+      setSavedIsEnabled(newState);
+      console.log('Shop By Category enabled state:', newState);
+    } catch (error) {
+      console.error('Error saving enabled state:', error);
+      setIsEnabled(!newState);
+    }
+  };
+
+  const handleHeadingChange = (field, value) => {
+    setHeadingData(prev => ({ ...prev, [field]: value }));
+  };
+
+  const handleHeadingSave = async () => {
+    try {
+      setLoading(true);
+      setSaveStatus({ section: 'heading', status: 'saving' });
+      
+      const docRef = doc(db, 'homepage', 'shopbycategory');
+      const docSnap = await getDoc(docRef);
+      const existingData = docSnap.exists() ? docSnap.data() : {};
+      
+      await setDoc(docRef, {
+        ...existingData,
+        heading: headingData
+      });
+      
+      setSavedHeadingData({ ...headingData });
+      setSaveStatus({ section: 'heading', status: 'success' });
+      setTimeout(() => setSaveStatus({ section: null, status: null }), 2000);
+      console.log('Heading Data Saved to Firebase:', headingData);
+    } catch (error) {
+      console.error('Error saving heading data:', error);
+      setSaveStatus({ section: 'heading', status: 'error' });
+      setTimeout(() => setSaveStatus({ section: null, status: null }), 2000);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleHeadingCancel = () => {
+    if (savedHeadingData) {
+      setHeadingData({ ...savedHeadingData });
+    } else {
+      setHeadingData({ heading: '', subheading: '', description: '' });
+    }
   };
 
   // ImageKit Browser Handlers
@@ -363,7 +444,81 @@ const ShopByCategory = () => {
 
   return (
     <div className="shop-by-category-container">
-      <h2 className="section-main-title">Shop by Category Configuration</h2>
+      <div className="section-header-row">
+        <h2 className="section-main-title">Shop by Category Configuration</h2>
+        <div className="enable-toggle">
+          <label className="toggle-label">
+            <input
+              type="checkbox"
+              checked={isEnabled}
+              onChange={(e) => handleEnableToggle(e.target.checked)}
+              className="toggle-checkbox"
+            />
+            <span className="toggle-text">{isEnabled ? 'Enabled' : 'Disabled'}</span>
+          </label>
+        </div>
+      </div>
+
+      {/* Heading Section */}
+      <div className="config-section">
+        <button 
+          className="section-header"
+          onClick={() => toggleSection('heading')}
+        >
+          <span className="section-header-title">Heading Section</span>
+          {expandedSection === 'heading' ? <ChevronUp size={20} /> : <ChevronDown size={20} />}
+        </button>
+        
+        {expandedSection === 'heading' && (
+          <div className="section-content-area">
+            <div className="form-group">
+              <label className="form-label">Heading</label>
+              <input
+                type="text"
+                className="form-input"
+                placeholder="Enter heading"
+                value={headingData.heading}
+                onChange={(e) => handleHeadingChange('heading', e.target.value)}
+              />
+            </div>
+
+            <div className="form-group">
+              <label className="form-label">Subheading</label>
+              <input
+                type="text"
+                className="form-input"
+                placeholder="Enter subheading"
+                value={headingData.subheading}
+                onChange={(e) => handleHeadingChange('subheading', e.target.value)}
+              />
+            </div>
+
+            <div className="form-group">
+              <label className="form-label">Description</label>
+              <textarea
+                className="form-textarea"
+                placeholder="Enter description"
+                rows="4"
+                value={headingData.description}
+                onChange={(e) => handleHeadingChange('description', e.target.value)}
+              />
+            </div>
+
+            <div className="section-actions">
+              <button className="btn-cancel" onClick={handleHeadingCancel}>Cancel</button>
+              <button className="btn-save" onClick={handleHeadingSave} disabled={loading}>
+                {loading && saveStatus.section === 'heading' ? 'Saving...' : 'Save'}
+              </button>
+              {saveStatus.section === 'heading' && saveStatus.status === 'success' && (
+                <span className="save-success">✓ Saved successfully!</span>
+              )}
+              {saveStatus.section === 'heading' && saveStatus.status === 'error' && (
+                <span className="save-error">✗ Error saving</span>
+              )}
+            </div>
+          </div>
+        )}
+      </div>
 
       {renderCategorySection(1, category1Data, handleCategory1Change, removeCategory1Image, handleCategory1Save, handleCategory1Cancel)}
       {renderCategorySection(2, category2Data, handleCategory2Change, removeCategory2Image, handleCategory2Save, handleCategory2Cancel)}
