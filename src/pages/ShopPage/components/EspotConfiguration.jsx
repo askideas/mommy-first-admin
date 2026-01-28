@@ -1,10 +1,49 @@
-import { useState } from 'react';
-import { Plus, X, Upload } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { Plus, X, Image } from 'lucide-react';
+import { doc, getDoc, setDoc } from 'firebase/firestore';
+import { db } from '../../../config/firebase';
+import ImageKitBrowser from '../../../components/ImageKitBrowser';
 import './EspotConfiguration.css';
 
 const EspotConfiguration = () => {
+  const [loading, setLoading] = useState(false);
+  const [saveStatus, setSaveStatus] = useState(null);
+  const [isImageKitOpen, setIsImageKitOpen] = useState(false);
+  const [selectedEspotId, setSelectedEspotId] = useState(null);
+  
   const [espots, setEspots] = useState([]);
   const [savedEspots, setSavedEspots] = useState([]);
+
+  useEffect(() => {
+    if (db) {
+      loadDataFromFirebase();
+    }
+  }, []);
+
+  const loadDataFromFirebase = async () => {
+    if (!db) {
+      console.error('Firebase not initialized');
+      return;
+    }
+    
+    try {
+      setLoading(true);
+      const docRef = doc(db, 'shoppage', 'espots');
+      const docSnap = await getDoc(docRef);
+      
+      if (docSnap.exists()) {
+        const data = docSnap.data();
+        if (data.espots) {
+          setEspots(data.espots);
+          setSavedEspots(data.espots);
+        }
+      }
+    } catch (error) {
+      console.error('Error loading data from Firebase:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const addEspot = () => {
     const newEspot = {
@@ -25,16 +64,17 @@ const EspotConfiguration = () => {
     ));
   };
 
-  const handleImageUpload = (id, e) => {
-    const file = e.target.files[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setEspots(espots.map(espot =>
-          espot.id === id ? { ...espot, image: reader.result } : espot
-        ));
-      };
-      reader.readAsDataURL(file);
+  const openImageKitBrowser = (espotId) => {
+    setSelectedEspotId(espotId);
+    setIsImageKitOpen(true);
+  };
+
+  const handleImageKitSelect = (imageUrl) => {
+    if (selectedEspotId) {
+      setEspots(espots.map(espot =>
+        espot.id === selectedEspotId ? { ...espot, image: imageUrl } : espot
+      ));
+      setSelectedEspotId(null);
     }
   };
 
@@ -44,10 +84,28 @@ const EspotConfiguration = () => {
     ));
   };
 
-  const handleSave = () => {
-    setSavedEspots([...espots]);
-    console.log('Espots Saved:', espots);
-    // Add your API call here
+  const handleSave = async () => {
+    try {
+      setLoading(true);
+      setSaveStatus('saving');
+      
+      const docRef = doc(db, 'shoppage', 'espots');
+      
+      await setDoc(docRef, {
+        espots: espots
+      });
+      
+      setSavedEspots([...espots]);
+      setSaveStatus('success');
+      setTimeout(() => setSaveStatus(null), 2000);
+      console.log('Espots Saved to Firebase:', espots);
+    } catch (error) {
+      console.error('Error saving espots:', error);
+      setSaveStatus('error');
+      setTimeout(() => setSaveStatus(null), 2000);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleCancel = () => {
@@ -106,26 +164,36 @@ const EspotConfiguration = () => {
                       <label className="form-label">Image</label>
                       <div className="image-upload-area">
                         {espot.image ? (
-                          <div className="image-preview">
-                            <img src={espot.image} alt={`Espot ${espot.index}`} />
-                            <button 
-                              className="remove-image-btn"
-                              onClick={() => removeEspotImage(espot.id)}
-                            >
-                              <X size={16} />
-                            </button>
+                          <div className="image-selected-container">
+                            <div className="image-preview">
+                              <img src={espot.image} alt={`Espot ${espot.index}`} />
+                            </div>
+                            <div className="image-actions">
+                              <button 
+                                type="button"
+                                className="btn-change"
+                                onClick={() => openImageKitBrowser(espot.id)}
+                              >
+                                Change
+                              </button>
+                              <button 
+                                type="button"
+                                className="btn-remove"
+                                onClick={() => removeEspotImage(espot.id)}
+                              >
+                                Remove
+                              </button>
+                            </div>
                           </div>
                         ) : (
-                          <label className="upload-label">
-                            <Upload size={24} />
-                            <span>Click to upload image</span>
-                            <input
-                              type="file"
-                              accept="image/*"
-                              onChange={(e) => handleImageUpload(espot.id, e)}
-                              style={{ display: 'none' }}
-                            />
-                          </label>
+                          <button 
+                            type="button"
+                            className="choose-image-btn"
+                            onClick={() => openImageKitBrowser(espot.id)}
+                          >
+                            <Image size={24} />
+                            <span>Choose Image</span>
+                          </button>
                         )}
                       </div>
                     </div>
@@ -136,11 +204,29 @@ const EspotConfiguration = () => {
           )}
 
           <div className="section-actions">
-            <button className="btn-cancel" onClick={handleCancel}>Cancel</button>
-            <button className="btn-save" onClick={handleSave}>Save</button>
+            <button className="btn-cancel" onClick={handleCancel} disabled={loading}>Cancel</button>
+            <button className="btn-save" onClick={handleSave} disabled={loading}>
+              {loading && saveStatus === 'saving' ? 'Saving...' : 'Save'}
+            </button>
+            {saveStatus === 'success' && (
+              <span className="save-success">✓ Saved successfully!</span>
+            )}
+            {saveStatus === 'error' && (
+              <span className="save-error">✗ Error saving</span>
+            )}
           </div>
         </div>
       </div>
+
+      {/* ImageKit Browser Modal */}
+      <ImageKitBrowser
+        isOpen={isImageKitOpen}
+        onClose={() => {
+          setIsImageKitOpen(false);
+          setSelectedEspotId(null);
+        }}
+        onSelect={handleImageKitSelect}
+      />
     </div>
   );
 };
