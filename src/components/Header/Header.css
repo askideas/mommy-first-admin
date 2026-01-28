@@ -104,6 +104,17 @@
   letter-spacing: -0.1px;
 }
 
+.logout-btn {
+  background: #f5f5f5;
+  border-color: #ddd;
+}
+
+.logout-btn:hover {
+  background: #ffebee;
+  border-color: #ef5350;
+  color: #ef5350;
+}
+
 /* Responsive */
 @media (max-width: 768px) {
   .header {
