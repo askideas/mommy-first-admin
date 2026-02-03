@@ -8,6 +8,7 @@ import Media from './pages/Media/Media';
 import ShopPage from './pages/ShopPage/ShopPage';
 import ReviewsSlider from './pages/ReviewsSlider/ReviewsSlider';
 import FaqsSlider from './pages/FaqsSlider/FaqsSlider';
+import EventsPage from './pages/Events/EventsPage';
 import './App.css';
 
 function App() {
@@ -32,6 +33,7 @@ function App() {
             <Route path="shop" element={<ShopPage />} />
             <Route path="reviews" element={<ReviewsSlider />} />
             <Route path="faqs" element={<FaqsSlider />} />
+            <Route path="livesessions" element={<EventsPage />} />
           </Route>
 
           {/* Catch all - Redirect to home or login */}

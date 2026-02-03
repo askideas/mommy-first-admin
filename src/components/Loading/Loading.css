@@ -1,9 +1,11 @@
+/* Swiss Style Loading */
 .loading-container {
   min-height: 100vh;
   display: flex;
+  flex-direction: column;
   justify-content: center;
   align-items: center;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: var(--primary-gradient);
 }
 
 .loading-spinner {
@@ -27,6 +29,7 @@
 .loading-text {
   color: white;
   margin-top: 20px;
-  font-size: 16px;
-  font-weight: 500;
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: -0.1px;
 }

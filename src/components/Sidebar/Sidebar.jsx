@@ -1,4 +1,4 @@
-import { Home, FileImage, ShoppingBag, Star, HelpCircle } from 'lucide-react';
+import { Home, FileImage, ShoppingBag, Star, HelpCircle, Calendar } from 'lucide-react';
 import { Link, useLocation } from 'react-router-dom';
 import './Sidebar.css';
 
@@ -10,6 +10,7 @@ const Sidebar = () => {
     { icon: ShoppingBag, label: 'Shop Page', path: '/shop' },
     { icon: Star, label: 'Reviews In Slider', path: '/reviews' },
     { icon: HelpCircle, label: 'FAQs In Slider', path: '/faqs' },
+    { icon: Calendar, label: 'Live Sessions', path: '/livesessions' },
     { icon: FileImage, label: 'Media', path: '/media' },
   ];
 
