@@ -85,7 +85,7 @@ const EventsPage = () => {
   };
 
   const handleDeleteSession = async (sessionId) => {
-    if (window.confirm('Are you sure you want to delete this session?')) {
+    if (window.confirm('Are you sure you want to delete this entire session?')) {
       try {
         await deleteDoc(doc(db, 'liveSessions', sessionId));
         fetchLiveSessions();
@@ -94,6 +94,38 @@ const EventsPage = () => {
         alert('Failed to delete session. Please try again.');
       }
     }
+  };
+
+  const handleDeleteIndividualDate = async (sessionId, dateToDelete) => {
+    const session = liveSessions.find(s => s.id === sessionId);
+    if (!session || !session.dates) return;
+
+    if (session.dates.length === 1) {
+      alert('Cannot delete the only date. Delete the entire session instead.');
+      return;
+    }
+
+    if (window.confirm(`Are you sure you want to delete the date: ${new Date(dateToDelete).toLocaleDateString()}?`)) {
+      try {
+        const updatedDates = session.dates.filter(d => d.date !== dateToDelete);
+        const sessionRef = doc(db, 'liveSessions', sessionId);
+        await updateDoc(sessionRef, { dates: updatedDates });
+        fetchLiveSessions();
+      } catch (error) {
+        console.error('Error deleting date:', error);
+        alert('Failed to delete date. Please try again.');
+      }
+    }
+  };
+
+  const handleEditIndividualDate = (session, dateToEdit) => {
+    // Create a session object with only the selected date
+    const singleDateSession = {
+      ...session,
+      dates: [session.dates.find(d => d.date === dateToEdit)]
+    };
+    setSelectedSession(singleDateSession);
+    setShowEditLiveSession(true);
   };
 
   const handleBookingAdded = () => {
@@ -152,7 +184,19 @@ const EventsPage = () => {
   // Filter live sessions based on search and date
   const filteredLiveSessions = liveSessions.filter(session => {
     const matchesSearch = session.sessionName?.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesDate = !dateFilter || session.date === dateFilter;
+    
+    // Handle both old (single date) and new (dates array) format
+    let matchesDate = !dateFilter;
+    if (dateFilter) {
+      if (session.dates) {
+        // New format: check if any date matches
+        matchesDate = session.dates.some(d => d.date === dateFilter);
+      } else if (session.date) {
+        // Old format: direct date comparison
+        matchesDate = session.date === dateFilter;
+      }
+    }
+    
     return matchesSearch && matchesDate;
   });
 
@@ -162,9 +206,21 @@ const EventsPage = () => {
     today.setHours(0, 0, 0, 0);
     
     return liveSessions.filter(session => {
-      const sessionDate = new Date(session.date);
-      sessionDate.setHours(0, 0, 0, 0);
-      return sessionDate >= today;
+      // Handle both old and new format
+      if (session.dates) {
+        // New format: check if any date is present or future
+        return session.dates.some(d => {
+          const sessionDate = new Date(d.date);
+          sessionDate.setHours(0, 0, 0, 0);
+          return sessionDate >= today;
+        });
+      } else if (session.date) {
+        // Old format
+        const sessionDate = new Date(session.date);
+        sessionDate.setHours(0, 0, 0, 0);
+        return sessionDate >= today;
+      }
+      return false;
     });
   };
 
@@ -260,37 +316,104 @@ const EventsPage = () => {
                       <span className="session-status active">Active</span>
                     </div>
                     <div className="session-card-body">
-                      <div className="session-date">
-                        <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-                          <path d="M12.6667 2.66667H3.33333C2.59695 2.66667 2 3.26362 2 4V13.3333C2 14.0697 2.59695 14.6667 3.33333 14.6667H12.6667C13.403 14.6667 14 14.0697 14 13.3333V4C14 3.26362 13.403 2.66667 12.6667 2.66667Z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-                          <path d="M10.6667 1.33333V4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-                          <path d="M5.33333 1.33333V4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-                          <path d="M2 6.66667H14" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-                        </svg>
-                        {new Date(session.date).toLocaleDateString('en-US', {
-                          weekday: 'short',
-                          year: 'numeric',
-                          month: 'short',
-                          day: 'numeric'
-                        })}
-                      </div>
-                      <div className="session-time-slots">
-                        <div className="time-slots-label">Time Slots:</div>
-                        <div className="time-slots-list-view">
-                          {session.timeSlots?.map((slot, index) => (
-                            <div key={index} className="time-slot-badge">
-                              <span className="slot-time">
-                                {typeof slot === 'string' ? slot : slot.time}
-                              </span>
-                              {typeof slot === 'object' && slot.capacity && (
-                                <span className="slot-capacity">
-                                  {slot.booked || 0}/{slot.capacity}
-                                </span>
+                      {/* Handle both old and new data formats */}
+                      {session.dates ? (
+                        // New format: Multiple dates
+                        session.dates.map((dateEntry, dateIndex) => (
+                          <div key={dateIndex} className="session-date-group">
+                            <div className="date-group-header">
+                              <div className="session-date">
+                                <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                                  <path d="M12.6667 2.66667H3.33333C2.59695 2.66667 2 3.26362 2 4V13.3333C2 14.0697 2.59695 14.6667 3.33333 14.6667H12.6667C13.403 14.6667 14 14.0697 14 13.3333V4C14 3.26362 13.403 2.66667 12.6667 2.66667Z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                                  <path d="M10.6667 1.33333V4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                                  <path d="M5.33333 1.33333V4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                                  <path d="M2 6.66667H14" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                                </svg>
+                                {new Date(dateEntry.date).toLocaleDateString('en-US', {
+                                  weekday: 'short',
+                                  year: 'numeric',
+                                  month: 'short',
+                                  day: 'numeric'
+                                })}
+                              </div>
+                              {session.dates.length > 1 && (
+                                <div className="date-actions">
+                                  <button
+                                    className="btn-icon-edit"
+                                    onClick={() => handleEditIndividualDate(session, dateEntry.date)}
+                                    title="Edit this date"
+                                  >
+                                    <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+                                      <path d="M10.5 1.5L12.5 3.5M1 13L3.5 12.5L12.5 3.5L10.5 1.5L1.5 10.5L1 13Z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                                    </svg>
+                                  </button>
+                                  <button
+                                    className="btn-icon-delete"
+                                    onClick={() => handleDeleteIndividualDate(session.id, dateEntry.date)}
+                                    title="Delete this date"
+                                  >
+                                    <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+                                      <path d="M1.75 3.5H12.25M5.25 6.125V10.5M8.75 6.125V10.5M2.625 3.5L3.5 12.25H10.5L11.375 3.5M5.25 3.5V1.75H8.75V3.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                                    </svg>
+                                  </button>
+                                </div>
                               )}
                             </div>
-                          ))}
-                        </div>
-                      </div>
+                            <div className="session-time-slots">
+                              <div className="time-slots-label">Time Slots:</div>
+                              <div className="time-slots-list-view">
+                                {dateEntry.timeSlots?.map((slot, index) => (
+                                  <div key={index} className="time-slot-badge">
+                                    <span className="slot-time">
+                                      {typeof slot === 'string' ? slot : slot.time}
+                                    </span>
+                                    {typeof slot === 'object' && slot.capacity && (
+                                      <span className="slot-capacity">
+                                        {slot.booked || 0}/{slot.capacity}
+                                      </span>
+                                    )}
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+                          </div>
+                        ))
+                      ) : (
+                        // Old format: Single date
+                        <>
+                          <div className="session-date">
+                            <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                              <path d="M12.6667 2.66667H3.33333C2.59695 2.66667 2 3.26362 2 4V13.3333C2 14.0697 2.59695 14.6667 3.33333 14.6667H12.6667C13.403 14.6667 14 14.0697 14 13.3333V4C14 3.26362 13.403 2.66667 12.6667 2.66667Z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                              <path d="M10.6667 1.33333V4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                              <path d="M5.33333 1.33333V4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                              <path d="M2 6.66667H14" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                            </svg>
+                            {new Date(session.date).toLocaleDateString('en-US', {
+                              weekday: 'short',
+                              year: 'numeric',
+                              month: 'short',
+                              day: 'numeric'
+                            })}
+                          </div>
+                          <div className="session-time-slots">
+                            <div className="time-slots-label">Time Slots:</div>
+                            <div className="time-slots-list-view">
+                              {session.timeSlots?.map((slot, index) => (
+                                <div key={index} className="time-slot-badge">
+                                  <span className="slot-time">
+                                    {typeof slot === 'string' ? slot : slot.time}
+                                  </span>
+                                  {typeof slot === 'object' && slot.capacity && (
+                                    <span className="slot-capacity">
+                                      {slot.booked || 0}/{slot.capacity}
+                                    </span>
+                                  )}
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        </>
+                      )}
                       <div className="session-card-actions">
                         <button
                           className="btn-edit"

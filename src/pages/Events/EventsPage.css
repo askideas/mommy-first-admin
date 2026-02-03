@@ -460,7 +460,7 @@
 /* Sessions Grid */
 .sessions-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+  grid-template-columns: 1fr;
   gap: 16px;
 }
 
@@ -516,6 +516,62 @@
   display: flex;
   flex-direction: column;
   gap: 12px;
+}
+
+.session-date-group {
+  padding: 12px;
+  background: var(--background);
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+}
+
+.session-date-group:not(:last-child) {
+  margin-bottom: 12px;
+}
+
+.date-group-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.date-actions {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+
+.btn-icon-edit,
+.btn-icon-delete {
+  padding: 6px;
+  border-radius: var(--radius-sm);
+  border: 1px solid;
+  background: white;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.btn-icon-edit {
+  border-color: #bfdbfe;
+  color: #1e40af;
+}
+
+.btn-icon-edit:hover {
+  background: #eff6ff;
+}
+
+.btn-icon-delete {
+  border-color: #fecaca;
+  color: #991b1b;
+}
+
+.btn-icon-delete:hover {
+  background: #fee2e2;
 }
 
 .session-date {

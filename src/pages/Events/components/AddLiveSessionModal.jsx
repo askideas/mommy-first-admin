@@ -5,53 +5,72 @@ import './AddLiveSessionModal.css';
 
 const AddLiveSessionModal = ({ onClose, onSessionAdded }) => {
   const [sessionName, setSessionName] = useState('');
-  const [selectedDate, setSelectedDate] = useState('');
-  const [timeSlots, setTimeSlots] = useState([{ time: '', capacity: '' }]);
+  const [sessionDates, setSessionDates] = useState([
+    { date: '', timeSlots: [{ time: '', capacity: '' }] }
+  ]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
-  const handleAddTimeSlot = () => {
-    setTimeSlots([...timeSlots, { time: '', capacity: '' }]);
+  const handleAddDate = () => {
+    setSessionDates([...sessionDates, { date: '', timeSlots: [{ time: '', capacity: '' }] }]);
   };
 
-  const handleRemoveTimeSlot = (index) => {
-    if (timeSlots.length > 1) {
-      setTimeSlots(timeSlots.filter((_, i) => i !== index));
+  const handleRemoveDate = (dateIndex) => {
+    if (sessionDates.length > 1) {
+      setSessionDates(sessionDates.filter((_, i) => i !== dateIndex));
     }
   };
 
-  const handleTimeChange = (index, value) => {
-    const updatedSlots = [...timeSlots];
-    updatedSlots[index].time = value;
-    setTimeSlots(updatedSlots);
+  const handleDateChange = (dateIndex, value) => {
+    const updated = [...sessionDates];
+    updated[dateIndex].date = value;
+    setSessionDates(updated);
   };
 
-  const handleCapacityChange = (index, value) => {
-    const updatedSlots = [...timeSlots];
-    updatedSlots[index].capacity = value;
-    setTimeSlots(updatedSlots);
+  const handleAddTimeSlot = (dateIndex) => {
+    const updated = [...sessionDates];
+    updated[dateIndex].timeSlots.push({ time: '', capacity: '' });
+    setSessionDates(updated);
   };
 
-  // Generate custom document ID based on date
-  const generateSessionId = async (dateString) => {
+  const handleRemoveTimeSlot = (dateIndex, slotIndex) => {
+    const updated = [...sessionDates];
+    if (updated[dateIndex].timeSlots.length > 1) {
+      updated[dateIndex].timeSlots = updated[dateIndex].timeSlots.filter((_, i) => i !== slotIndex);
+      setSessionDates(updated);
+    }
+  };
+
+  const handleTimeChange = (dateIndex, slotIndex, value) => {
+    const updated = [...sessionDates];
+    updated[dateIndex].timeSlots[slotIndex].time = value;
+    setSessionDates(updated);
+  };
+
+  const handleCapacityChange = (dateIndex, slotIndex, value) => {
+    const updated = [...sessionDates];
+    updated[dateIndex].timeSlots[slotIndex].capacity = value;
+    setSessionDates(updated);
+  };
+
+  // Generate custom document ID based on first date
+  const generateSessionId = async (firstDate) => {
     // Convert date from YYYY-MM-DD to DDMMYYYY format
-    const [year, month, day] = dateString.split('-');
+    const [year, month, day] = firstDate.split('-');
     const formattedDate = `${day}${month}${year}`;
     const baseId = `LV${formattedDate}`;
 
     // Check if this ID already exists
     const sessionsRef = collection(db, 'liveSessions');
-    const q = query(sessionsRef, where('date', '==', dateString));
-    const querySnapshot = await getDocs(q);
+    const allSessionsQuery = await getDocs(sessionsRef);
+    const existingIds = allSessionsQuery.docs.map(doc => doc.id);
 
-    if (querySnapshot.empty) {
+    if (!existingIds.includes(baseId)) {
       return baseId;
     }
 
-    // If sessions exist for this date, find the highest suffix
-    const existingIds = querySnapshot.docs.map(doc => doc.id);
+    // If ID exists, find the highest suffix
     let suffix = 1;
-
     while (true) {
       const newId = `${baseId}-${suffix}`;
       if (!existingIds.includes(newId)) {
@@ -71,21 +90,27 @@ const AddLiveSessionModal = ({ onClose, onSessionAdded }) => {
       return;
     }
 
-    if (!selectedDate) {
-      setError('Please select a date');
-      return;
-    }
+    // Validate each date and its time slots
+    const validDates = sessionDates.filter(dateEntry => {
+      if (!dateEntry.date) return false;
+      const validSlots = dateEntry.timeSlots.filter(slot => 
+        slot.time.trim() !== '' && slot.capacity
+      );
+      return validSlots.length > 0;
+    });
 
-    const validTimeSlots = timeSlots.filter(slot => slot.time.trim() !== '' && slot.capacity);
-    if (validTimeSlots.length === 0) {
-      setError('Please add at least one time slot with capacity');
+    if (validDates.length === 0) {
+      setError('Please add at least one date with valid time slots');
       return;
     }
 
     // Validate capacity values
-    const hasInvalidCapacity = validTimeSlots.some(slot => {
-      const capacity = parseInt(slot.capacity);
-      return isNaN(capacity) || capacity <= 0;
+    const hasInvalidCapacity = validDates.some(dateEntry => {
+      return dateEntry.timeSlots.some(slot => {
+        if (!slot.time.trim() || !slot.capacity) return false;
+        const capacity = parseInt(slot.capacity);
+        return isNaN(capacity) || capacity <= 0;
+      });
     });
 
     if (hasInvalidCapacity) {
@@ -96,18 +121,25 @@ const AddLiveSessionModal = ({ onClose, onSessionAdded }) => {
     try {
       setLoading(true);
 
-      // Generate custom session ID
-      const sessionId = await generateSessionId(selectedDate);
+      // Use first date for session ID generation
+      const sessionId = await generateSessionId(validDates[0].date);
 
-      // Save to Firebase with custom ID
+      // Prepare dates data
+      const datesData = validDates.map(dateEntry => ({
+        date: dateEntry.date,
+        timeSlots: dateEntry.timeSlots
+          .filter(slot => slot.time.trim() !== '' && slot.capacity)
+          .map(slot => ({
+            time: slot.time,
+            capacity: parseInt(slot.capacity),
+            booked: 0
+          }))
+      }));
+
+      // Save single session with all dates
       await setDoc(doc(db, 'liveSessions', sessionId), {
         sessionName: sessionName.trim(),
-        date: selectedDate,
-        timeSlots: validTimeSlots.map(slot => ({
-          time: slot.time,
-          capacity: parseInt(slot.capacity),
-          booked: 0
-        })),
+        dates: datesData,
         createdAt: serverTimestamp(),
         status: 'active'
       });
@@ -145,59 +177,84 @@ const AddLiveSessionModal = ({ onClose, onSessionAdded }) => {
             />
           </div>
 
-          {/* Date Selection */}
-          <div className="form-group">
-            <label htmlFor="sessionDate">Date *</label>
-            <input
-              type="date"
-              id="sessionDate"
-              value={selectedDate}
-              onChange={(e) => setSelectedDate(e.target.value)}
-              min={new Date().toISOString().split('T')[0]}
-              className="form-input"
-            />
-          </div>
-
-          {/* Time Slots */}
+          {/* Dates and Time Slots */}
           <div className="form-group">
             <div className="time-slots-header">
-              <label>Time Slots *</label>
+              <label>Session Dates & Time Slots *</label>
               <button
                 type="button"
                 className="btn-secondary-small"
-                onClick={handleAddTimeSlot}
+                onClick={handleAddDate}
               >
-                + Add Time Slot
+                + Add Date
               </button>
             </div>
 
-            <div className="time-slots-list">
-              {timeSlots.map((slot, index) => (
-                <div key={index} className="time-slot-input-row">
-                  <input
-                    type="time"
-                    value={slot.time}
-                    onChange={(e) => handleTimeChange(index, e.target.value)}
-                    className="form-input"
-                    placeholder="Select time"
-                  />
-                  <input
-                    type="number"
-                    value={slot.capacity}
-                    onChange={(e) => handleCapacityChange(index, e.target.value)}
-                    className="form-input capacity-input"
-                    placeholder="Capacity"
-                    min="1"
-                  />
-                  {timeSlots.length > 1 && (
-                    <button
-                      type="button"
-                      className="btn-remove"
-                      onClick={() => handleRemoveTimeSlot(index)}
-                    >
-                      Remove
-                    </button>
-                  )}
+            <div className="dates-list">
+              {sessionDates.map((dateEntry, dateIndex) => (
+                <div key={dateIndex} className="date-entry">
+                  <div className="date-header">
+                    <input
+                      type="date"
+                      value={dateEntry.date}
+                      onChange={(e) => handleDateChange(dateIndex, e.target.value)}
+                      min={new Date().toISOString().split('T')[0]}
+                      className="form-input"
+                    />
+                    {sessionDates.length > 1 && (
+                      <button
+                        type="button"
+                        className="btn-remove"
+                        onClick={() => handleRemoveDate(dateIndex)}
+                      >
+                        Remove Date
+                      </button>
+                    )}
+                  </div>
+
+                  <div className="time-slots-section">
+                    <div className="time-slots-subheader">
+                      <span>Time Slots</span>
+                      <button
+                        type="button"
+                        className="btn-add-slot"
+                        onClick={() => handleAddTimeSlot(dateIndex)}
+                      >
+                        + Add Slot
+                      </button>
+                    </div>
+                    
+                    <div className="time-slots-list">
+                      {dateEntry.timeSlots.map((slot, slotIndex) => (
+                        <div key={slotIndex} className="time-slot-input-row">
+                          <input
+                            type="time"
+                            value={slot.time}
+                            onChange={(e) => handleTimeChange(dateIndex, slotIndex, e.target.value)}
+                            className="form-input"
+                            placeholder="Select time"
+                          />
+                          <input
+                            type="number"
+                            value={slot.capacity}
+                            onChange={(e) => handleCapacityChange(dateIndex, slotIndex, e.target.value)}
+                            className="form-input capacity-input"
+                            placeholder="Capacity"
+                            min="1"
+                          />
+                          {dateEntry.timeSlots.length > 1 && (
+                            <button
+                              type="button"
+                              className="btn-remove-slot"
+                              onClick={() => handleRemoveTimeSlot(dateIndex, slotIndex)}
+                            >
+                              ×
+                            </button>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
                 </div>
               ))}
             </div>

@@ -5,48 +5,81 @@ import './AddLiveSessionModal.css';
 
 const EditLiveSessionModal = ({ session, onClose, onSessionUpdated }) => {
   const [sessionName, setSessionName] = useState('');
-  const [selectedDate, setSelectedDate] = useState('');
-  const [timeSlots, setTimeSlots] = useState([{ time: '', capacity: '' }]);
+  const [sessionDates, setSessionDates] = useState([
+    { date: '', timeSlots: [{ time: '', capacity: '' }] }
+  ]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
   useEffect(() => {
     if (session) {
       setSessionName(session.sessionName || '');
-      setSelectedDate(session.date || '');
       
-      // Handle both old format (string array) and new format (object array)
-      const slots = session.timeSlots?.map(slot => {
-        if (typeof slot === 'string') {
-          return { time: slot, capacity: '' };
-        }
-        return { time: slot.time || '', capacity: slot.capacity || '' };
-      }) || [{ time: '', capacity: '' }];
-      
-      setTimeSlots(slots);
+      // Handle new format (dates array) and old format (single date)
+      if (session.dates) {
+        // New format: Multiple dates
+        const formattedDates = session.dates.map(dateEntry => ({
+          date: dateEntry.date || '',
+          timeSlots: dateEntry.timeSlots?.map(slot => ({
+            time: typeof slot === 'string' ? slot : (slot.time || ''),
+            capacity: typeof slot === 'object' ? (slot.capacity || '') : ''
+          })) || [{ time: '', capacity: '' }]
+        }));
+        setSessionDates(formattedDates);
+      } else if (session.date) {
+        // Old format: Single date
+        const slots = session.timeSlots?.map(slot => {
+          if (typeof slot === 'string') {
+            return { time: slot, capacity: '' };
+          }
+          return { time: slot.time || '', capacity: slot.capacity || '' };
+        }) || [{ time: '', capacity: '' }];
+        
+        setSessionDates([{ date: session.date, timeSlots: slots }]);
+      }
     }
   }, [session]);
 
-  const handleAddTimeSlot = () => {
-    setTimeSlots([...timeSlots, { time: '', capacity: '' }]);
+  const handleAddDate = () => {
+    setSessionDates([...sessionDates, { date: '', timeSlots: [{ time: '', capacity: '' }] }]);
   };
 
-  const handleRemoveTimeSlot = (index) => {
-    if (timeSlots.length > 1) {
-      setTimeSlots(timeSlots.filter((_, i) => i !== index));
+  const handleRemoveDate = (dateIndex) => {
+    if (sessionDates.length > 1) {
+      setSessionDates(sessionDates.filter((_, i) => i !== dateIndex));
     }
   };
 
-  const handleTimeChange = (index, value) => {
-    const updatedSlots = [...timeSlots];
-    updatedSlots[index].time = value;
-    setTimeSlots(updatedSlots);
+  const handleDateChange = (dateIndex, value) => {
+    const updated = [...sessionDates];
+    updated[dateIndex].date = value;
+    setSessionDates(updated);
   };
 
-  const handleCapacityChange = (index, value) => {
-    const updatedSlots = [...timeSlots];
-    updatedSlots[index].capacity = value;
-    setTimeSlots(updatedSlots);
+  const handleAddTimeSlot = (dateIndex) => {
+    const updated = [...sessionDates];
+    updated[dateIndex].timeSlots.push({ time: '', capacity: '' });
+    setSessionDates(updated);
+  };
+
+  const handleRemoveTimeSlot = (dateIndex, slotIndex) => {
+    const updated = [...sessionDates];
+    if (updated[dateIndex].timeSlots.length > 1) {
+      updated[dateIndex].timeSlots = updated[dateIndex].timeSlots.filter((_, i) => i !== slotIndex);
+      setSessionDates(updated);
+    }
+  };
+
+  const handleTimeChange = (dateIndex, slotIndex, value) => {
+    const updated = [...sessionDates];
+    updated[dateIndex].timeSlots[slotIndex].time = value;
+    setSessionDates(updated);
+  };
+
+  const handleCapacityChange = (dateIndex, slotIndex, value) => {
+    const updated = [...sessionDates];
+    updated[dateIndex].timeSlots[slotIndex].capacity = value;
+    setSessionDates(updated);
   };
 
   const handleSubmit = async (e) => {
@@ -59,21 +92,27 @@ const EditLiveSessionModal = ({ session, onClose, onSessionUpdated }) => {
       return;
     }
 
-    if (!selectedDate) {
-      setError('Please select a date');
-      return;
-    }
+    // Validate each date and its time slots
+    const validDates = sessionDates.filter(dateEntry => {
+      if (!dateEntry.date) return false;
+      const validSlots = dateEntry.timeSlots.filter(slot => 
+        slot.time.trim() !== '' && slot.capacity
+      );
+      return validSlots.length > 0;
+    });
 
-    const validTimeSlots = timeSlots.filter(slot => slot.time.trim() !== '' && slot.capacity);
-    if (validTimeSlots.length === 0) {
-      setError('Please add at least one time slot with capacity');
+    if (validDates.length === 0) {
+      setError('Please add at least one date with valid time slots');
       return;
     }
 
     // Validate capacity values
-    const hasInvalidCapacity = validTimeSlots.some(slot => {
-      const capacity = parseInt(slot.capacity);
-      return isNaN(capacity) || capacity <= 0;
+    const hasInvalidCapacity = validDates.some(dateEntry => {
+      return dateEntry.timeSlots.some(slot => {
+        if (!slot.time.trim() || !slot.capacity) return false;
+        const capacity = parseInt(slot.capacity);
+        return isNaN(capacity) || capacity <= 0;
+      });
     });
 
     if (hasInvalidCapacity) {
@@ -84,16 +123,23 @@ const EditLiveSessionModal = ({ session, onClose, onSessionUpdated }) => {
     try {
       setLoading(true);
 
+      // Prepare dates data
+      const datesData = validDates.map(dateEntry => ({
+        date: dateEntry.date,
+        timeSlots: dateEntry.timeSlots
+          .filter(slot => slot.time.trim() !== '' && slot.capacity)
+          .map(slot => ({
+            time: slot.time,
+            capacity: parseInt(slot.capacity),
+            booked: 0
+          }))
+      }));
+
       // Update in Firebase
       const sessionRef = doc(db, 'liveSessions', session.id);
       await updateDoc(sessionRef, {
         sessionName: sessionName.trim(),
-        date: selectedDate,
-        timeSlots: validTimeSlots.map(slot => ({
-          time: slot.time,
-          capacity: parseInt(slot.capacity),
-          booked: 0
-        }))
+        dates: datesData
       });
 
       onSessionUpdated();
@@ -129,59 +175,84 @@ const EditLiveSessionModal = ({ session, onClose, onSessionUpdated }) => {
             />
           </div>
 
-          {/* Date Selection */}
-          <div className="form-group">
-            <label htmlFor="sessionDate">Date *</label>
-            <input
-              type="date"
-              id="sessionDate"
-              value={selectedDate}
-              onChange={(e) => setSelectedDate(e.target.value)}
-              min={new Date().toISOString().split('T')[0]}
-              className="form-input"
-            />
-          </div>
-
-          {/* Time Slots */}
+          {/* Dates and Time Slots */}
           <div className="form-group">
             <div className="time-slots-header">
-              <label>Time Slots *</label>
+              <label>Session Dates & Time Slots *</label>
               <button
                 type="button"
                 className="btn-secondary-small"
-                onClick={handleAddTimeSlot}
+                onClick={handleAddDate}
               >
-                + Add Time Slot
+                + Add Date
               </button>
             </div>
 
-            <div className="time-slots-list">
-              {timeSlots.map((slot, index) => (
-                <div key={index} className="time-slot-input-row">
-                  <input
-                    type="time"
-                    value={slot.time}
-                    onChange={(e) => handleTimeChange(index, e.target.value)}
-                    className="form-input"
-                    placeholder="Select time"
-                  />
-                  <input
-                    type="number"
-                    value={slot.capacity}
-                    onChange={(e) => handleCapacityChange(index, e.target.value)}
-                    className="form-input capacity-input"
-                    placeholder="Capacity"
-                    min="1"
-                  />
-                  {timeSlots.length > 1 && (
-                    <button
-                      type="button"
-                      className="btn-remove"
-                      onClick={() => handleRemoveTimeSlot(index)}
-                    >
-                      Remove
-                    </button>
-                  )}
+            <div className="dates-list">
+              {sessionDates.map((dateEntry, dateIndex) => (
+                <div key={dateIndex} className="date-entry">
+                  <div className="date-header">
+                    <input
+                      type="date"
+                      value={dateEntry.date}
+                      onChange={(e) => handleDateChange(dateIndex, e.target.value)}
+                      min={new Date().toISOString().split('T')[0]}
+                      className="form-input"
+                    />
+                    {sessionDates.length > 1 && (
+                      <button
+                        type="button"
+                        className="btn-remove"
+                        onClick={() => handleRemoveDate(dateIndex)}
+                      >
+                        Remove Date
+                      </button>
+                    )}
+                  </div>
+
+                  <div className="time-slots-section">
+                    <div className="time-slots-subheader">
+                      <span>Time Slots</span>
+                      <button
+                        type="button"
+                        className="btn-add-slot"
+                        onClick={() => handleAddTimeSlot(dateIndex)}
+                      >
+                        + Add Slot
+                      </button>
+                    </div>
+                    
+                    <div className="time-slots-list">
+                      {dateEntry.timeSlots.map((slot, slotIndex) => (
+                        <div key={slotIndex} className="time-slot-input-row">
+                          <input
+                            type="time"
+                            value={slot.time}
+                            onChange={(e) => handleTimeChange(dateIndex, slotIndex, e.target.value)}
+                            className="form-input"
+                            placeholder="Select time"
+                          />
+                          <input
+                            type="number"
+                            value={slot.capacity}
+                            onChange={(e) => handleCapacityChange(dateIndex, slotIndex, e.target.value)}
+                            className="form-input capacity-input"
+                            placeholder="Capacity"
+                            min="1"
+                          />
+                          {dateEntry.timeSlots.length > 1 && (
+                            <button
+                              type="button"
+                              className="btn-remove-slot"
+                              onClick={() => handleRemoveTimeSlot(dateIndex, slotIndex)}
+                            >
+                              ×
+                            </button>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
                 </div>
               ))}
             </div>
