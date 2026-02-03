@@ -17,6 +17,11 @@ const EventsPage = () => {
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [dateFilter, setDateFilter] = useState('');
+  
+  // Booking filters
+  const [bookingSessionFilter, setBookingSessionFilter] = useState('');
+  const [bookingDateFilter, setBookingDateFilter] = useState('');
+  const [bookingTimeSlotFilter, setBookingTimeSlotFilter] = useState('');
 
   useEffect(() => {
     fetchLiveSessions();
@@ -99,6 +104,37 @@ const EventsPage = () => {
     const matchesSearch = session.sessionName?.toLowerCase().includes(searchQuery.toLowerCase());
     const matchesDate = !dateFilter || session.date === dateFilter;
     return matchesSearch && matchesDate;
+  });
+
+  // Get active sessions (present and future)
+  const getActiveSessions = () => {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    
+    return liveSessions.filter(session => {
+      const sessionDate = new Date(session.date);
+      sessionDate.setHours(0, 0, 0, 0);
+      return sessionDate >= today;
+    });
+  };
+
+  // Get unique time slots from filtered bookings
+  const getUniqueTimeSlots = () => {
+    const timeSlots = new Set();
+    bookings.forEach(booking => {
+      if (booking.timeSlot) {
+        timeSlots.add(booking.timeSlot);
+      }
+    });
+    return Array.from(timeSlots).sort();
+  };
+
+  // Filter bookings based on filters
+  const filteredBookings = bookings.filter(booking => {
+    const matchesSession = !bookingSessionFilter || booking.sessionId === bookingSessionFilter;
+    const matchesDate = !bookingDateFilter || booking.sessionDate === bookingDateFilter;
+    const matchesTimeSlot = !bookingTimeSlotFilter || booking.timeSlot === bookingTimeSlotFilter;
+    return matchesSession && matchesDate && matchesTimeSlot;
   });
 
   const renderSectionContent = () => {
@@ -232,8 +268,8 @@ const EventsPage = () => {
           <div>
             <div className="content-header">
               <div>
-                <h2>Live Session Bookings</h2>
-                <p className="content-subtitle">Manage session bookings and attendees</p>
+                <h2>Session Bookings</h2>
+                <p className="content-subtitle">Manage all session bookings</p>
               </div>
               <button 
                 className="btn-primary"
@@ -243,17 +279,83 @@ const EventsPage = () => {
               </button>
             </div>
 
-            {/* Bookings List */}
-            {bookings.length === 0 ? (
-              <div className="empty-state">
-                <p>No bookings yet</p>
-                <button 
-                  className="btn-primary"
-                  onClick={() => setShowAddBooking(true)}
-                  style={{ marginTop: '12px' }}
+            {/* Filters */}
+            <div className="filters-container">
+              <div className="filter-group">
+                <label className="filter-label">Session</label>
+                <select
+                  value={bookingSessionFilter}
+                  onChange={(e) => setBookingSessionFilter(e.target.value)}
+                  className="filter-select"
                 >
-                  Add First Booking
+                  <option value="">All Sessions</option>
+                  {getActiveSessions().map(session => (
+                    <option key={session.id} value={session.id}>
+                      {session.sessionName} - {new Date(session.date).toLocaleDateString('en-US', {
+                        month: 'short',
+                        day: 'numeric',
+                        year: 'numeric'
+                      })}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="filter-group">
+                <label className="filter-label">Date</label>
+                <input
+                  type="date"
+                  value={bookingDateFilter}
+                  onChange={(e) => setBookingDateFilter(e.target.value)}
+                  className="filter-input"
+                />
+              </div>
+
+              <div className="filter-group">
+                <label className="filter-label">Time Slot</label>
+                <select
+                  value={bookingTimeSlotFilter}
+                  onChange={(e) => setBookingTimeSlotFilter(e.target.value)}
+                  className="filter-select"
+                >
+                  <option value="">All Time Slots</option>
+                  {getUniqueTimeSlots().map(timeSlot => (
+                    <option key={timeSlot} value={timeSlot}>
+                      {timeSlot}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              {(bookingSessionFilter || bookingDateFilter || bookingTimeSlotFilter) && (
+                <button
+                  className="clear-all-filters-btn"
+                  onClick={() => {
+                    setBookingSessionFilter('');
+                    setBookingDateFilter('');
+                    setBookingTimeSlotFilter('');
+                  }}
+                >
+                  Clear All
                 </button>
+              )}
+            </div>
+
+            {/* Bookings List */}
+            {filteredBookings.length === 0 ? (
+              <div className="empty-state">
+                <p>{(bookingSessionFilter || bookingDateFilter || bookingTimeSlotFilter) 
+                  ? 'No bookings match your filters' 
+                  : 'No bookings yet'}</p>
+                {!(bookingSessionFilter || bookingDateFilter || bookingTimeSlotFilter) && (
+                  <button 
+                    className="btn-primary"
+                    onClick={() => setShowAddBooking(true)}
+                    style={{ marginTop: '12px' }}
+                  >
+                    Add First Booking
+                  </button>
+                )}
               </div>
             ) : (
               <div className="bookings-table-wrapper">
@@ -270,7 +372,7 @@ const EventsPage = () => {
                     </tr>
                   </thead>
                   <tbody>
-                    {bookings.map(booking => (
+                    {filteredBookings.map(booking => (
                       <tr key={booking.id}>
                         <td>{booking.name}</td>
                         <td>{booking.email}</td>
