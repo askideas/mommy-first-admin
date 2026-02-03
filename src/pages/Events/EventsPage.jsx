@@ -1,9 +1,10 @@
 import { useState, useEffect } from 'react';
-import { collection, getDocs, query, orderBy, deleteDoc, doc } from 'firebase/firestore';
+import { collection, getDocs, query, orderBy, deleteDoc, doc, updateDoc } from 'firebase/firestore';
 import { db } from '../../config/firebase';
 import AddLiveSessionModal from './components/AddLiveSessionModal';
 import EditLiveSessionModal from './components/EditLiveSessionModal';
 import AddSessionBookingModal from './components/AddSessionBookingModal';
+import EditSessionBookingModal from './components/EditSessionBookingModal';
 import './EventsPage.css';
 
 const EventsPage = () => {
@@ -11,7 +12,9 @@ const EventsPage = () => {
   const [showAddLiveSession, setShowAddLiveSession] = useState(false);
   const [showEditLiveSession, setShowEditLiveSession] = useState(false);
   const [showAddBooking, setShowAddBooking] = useState(false);
+  const [showEditBooking, setShowEditBooking] = useState(false);
   const [selectedSession, setSelectedSession] = useState(null);
+  const [selectedBooking, setSelectedBooking] = useState(null);
   const [liveSessions, setLiveSessions] = useState([]);
   const [bookings, setBookings] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -97,6 +100,53 @@ const EventsPage = () => {
     setShowAddBooking(false);
     fetchBookings();
     fetchLiveSessions(); // Refresh to update capacity counts
+  };
+
+  const handleEditBooking = (booking) => {
+    setSelectedBooking(booking);
+    setShowEditBooking(true);
+  };
+
+  const handleBookingUpdated = () => {
+    setShowEditBooking(false);
+    setSelectedBooking(null);
+    fetchBookings();
+    fetchLiveSessions();
+  };
+
+  const handleDeleteBooking = async (bookingId, sessionId, timeSlot) => {
+    if (window.confirm('Are you sure you want to delete this booking?')) {
+      try {
+        // Delete booking
+        await deleteDoc(doc(db, 'sessionBookings', bookingId));
+        
+        // Update session capacity
+        if (sessionId) {
+          const session = liveSessions.find(s => s.id === sessionId);
+          if (session?.timeSlots) {
+            const updatedSlots = session.timeSlots.map(slot => {
+              const time = typeof slot === 'string' ? slot : slot.time;
+              if (time === timeSlot && typeof slot === 'object') {
+                return {
+                  ...slot,
+                  booked: Math.max(0, (slot.booked || 0) - 1)
+                };
+              }
+              return slot;
+            });
+            
+            const sessionRef = doc(db, 'liveSessions', sessionId);
+            await updateDoc(sessionRef, { timeSlots: updatedSlots });
+          }
+        }
+        
+        fetchBookings();
+        fetchLiveSessions();
+      } catch (error) {
+        console.error('Error deleting booking:', error);
+        alert('Failed to delete booking. Please try again.');
+      }
+    }
   };
 
   // Filter live sessions based on search and date
@@ -369,6 +419,7 @@ const EventsPage = () => {
                       <th>Date</th>
                       <th>Time Slot</th>
                       <th>Status</th>
+                      <th>Actions</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -388,6 +439,24 @@ const EventsPage = () => {
                           <span className={`status-badge ${booking.status || 'confirmed'}`}>
                             {booking.status || 'Confirmed'}
                           </span>
+                        </td>
+                        <td>
+                          <div className="table-actions">
+                            <button
+                              className="btn-edit-small"
+                              onClick={() => handleEditBooking(booking)}
+                              title="Edit booking"
+                            >
+                              Edit
+                            </button>
+                            <button
+                              className="btn-delete-small"
+                              onClick={() => handleDeleteBooking(booking.id, booking.sessionId, booking.timeSlot)}
+                              title="Delete booking"
+                            >
+                              Delete
+                            </button>
+                          </div>
                         </td>
                       </tr>
                     ))}
@@ -460,6 +529,17 @@ const EventsPage = () => {
         <AddSessionBookingModal
           onClose={() => setShowAddBooking(false)}
           onBookingAdded={handleBookingAdded}
+        />
+      )}
+
+      {showEditBooking && selectedBooking && (
+        <EditSessionBookingModal
+          booking={selectedBooking}
+          onClose={() => {
+            setShowEditBooking(false);
+            setSelectedBooking(null);
+          }}
+          onBookingUpdated={handleBookingUpdated}
         />
       )}
     </div>
