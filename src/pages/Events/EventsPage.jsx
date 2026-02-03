@@ -1,88 +1,27 @@
 import { useState, useEffect } from 'react';
-import { collection, getDocs, query, orderBy, where, deleteDoc, doc } from 'firebase/firestore';
+import { collection, getDocs, query, orderBy, deleteDoc, doc } from 'firebase/firestore';
 import { db } from '../../config/firebase';
-import ManageCalendarModal from './components/ManageCalendarModal';
-import AddBookingModal from './components/AddBookingModal';
 import AddLiveSessionModal from './components/AddLiveSessionModal';
 import EditLiveSessionModal from './components/EditLiveSessionModal';
+import AddSessionBookingModal from './components/AddSessionBookingModal';
 import './EventsPage.css';
 
 const EventsPage = () => {
-  const [selectedView, setSelectedView] = useState('live-sessions');
-  const [showManageCalendar, setShowManageCalendar] = useState(false);
-  const [showAddBooking, setShowAddBooking] = useState(false);
+  const [selectedSection, setSelectedSection] = useState('live-sessions');
   const [showAddLiveSession, setShowAddLiveSession] = useState(false);
   const [showEditLiveSession, setShowEditLiveSession] = useState(false);
+  const [showAddBooking, setShowAddBooking] = useState(false);
   const [selectedSession, setSelectedSession] = useState(null);
-  const [bookings, setBookings] = useState([]);
-  const [availableDates, setAvailableDates] = useState([]);
   const [liveSessions, setLiveSessions] = useState([]);
+  const [bookings, setBookings] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [dateFilter, setDateFilter] = useState('');
 
   useEffect(() => {
-    fetchData();
+    fetchLiveSessions();
+    fetchBookings();
   }, []);
-
-  const fetchData = async () => {
-    await Promise.all([fetchBookings(), fetchAvailableDates(), fetchLiveSessions()]);
-  };
-
-  const fetchBookings = async () => {
-    try {
-      const bookingsRef = collection(db, 'eventBookings');
-      const q = query(bookingsRef, orderBy('createdAt', 'desc'));
-      const querySnapshot = await getDocs(q);
-      
-      const bookingsData = querySnapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data()
-      }));
-      
-      setBookings(bookingsData);
-    } catch (error) {
-      console.error('Error fetching bookings:', error);
-    }
-  };
-
-  const fetchAvailableDates = async () => {
-    try {
-      setLoading(true);
-      const calendarRef = collection(db, 'eventCalendar');
-      const today = new Date().toISOString().split('T')[0];
-      const q = query(calendarRef, where('date', '>=', today));
-      const querySnapshot = await getDocs(q);
-      
-      const slots = querySnapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data()
-      }));
-
-      // Group by date
-      const grouped = {};
-      slots.forEach(slot => {
-        if (!grouped[slot.date]) {
-          grouped[slot.date] = [];
-        }
-        grouped[slot.date].push(slot);
-      });
-
-      // Convert to array and sort
-      const datesArray = Object.entries(grouped)
-        .map(([date, slots]) => ({
-          date,
-          slots: slots.sort((a, b) => a.time.localeCompare(b.time))
-        }))
-        .sort((a, b) => a.date.localeCompare(b.date));
-
-      setAvailableDates(datesArray);
-    } catch (error) {
-      console.error('Error fetching available dates:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const fetchLiveSessions = async () => {
     try {
@@ -104,19 +43,26 @@ const EventsPage = () => {
     }
   };
 
-  const handleCalendarSaved = () => {
-    setShowManageCalendar(false);
-    fetchData();
-  };
-
-  const handleBookingAdded = () => {
-    setShowAddBooking(false);
-    fetchData();
+  const fetchBookings = async () => {
+    try {
+      const bookingsRef = collection(db, 'sessionBookings');
+      const q = query(bookingsRef, orderBy('bookedAt', 'desc'));
+      const querySnapshot = await getDocs(q);
+      
+      const bookingsData = querySnapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data()
+      }));
+      
+      setBookings(bookingsData);
+    } catch (error) {
+      console.error('Error fetching bookings:', error);
+    }
   };
 
   const handleLiveSessionAdded = () => {
     setShowAddLiveSession(false);
-    fetchData();
+    fetchLiveSessions();
   };
 
   const handleEditSession = (session) => {
@@ -142,6 +88,12 @@ const EventsPage = () => {
     }
   };
 
+  const handleBookingAdded = () => {
+    setShowAddBooking(false);
+    fetchBookings();
+    fetchLiveSessions(); // Refresh to update capacity counts
+  };
+
   // Filter live sessions based on search and date
   const filteredLiveSessions = liveSessions.filter(session => {
     const matchesSearch = session.sessionName?.toLowerCase().includes(searchQuery.toLowerCase());
@@ -149,15 +101,15 @@ const EventsPage = () => {
     return matchesSearch && matchesDate;
   });
 
-  const renderContent = () => {
-    switch (selectedView) {
+  const renderSectionContent = () => {
+    switch (selectedSection) {
       case 'live-sessions':
         return (
-          <div className="section-content">
+          <div>
             <div className="content-header">
               <div>
                 <h2>Live Sessions</h2>
-                <p className="content-subtitle">Manage live session schedules and time slots</p>
+                <p className="content-subtitle">Create and manage your live sessions</p>
               </div>
               <button 
                 className="btn-primary"
@@ -275,73 +227,13 @@ const EventsPage = () => {
           </div>
         );
 
-      case 'available-dates':
+      case 'session-bookings':
         return (
-          <div className="section-content">
+          <div>
             <div className="content-header">
               <div>
-                <h2>Available Dates & Times</h2>
-                <p className="content-subtitle">Manage your event calendar and time slots</p>
-              </div>
-              <button 
-                className="btn-primary"
-                onClick={() => setShowManageCalendar(true)}
-              >
-                Manage Calendar
-              </button>
-            </div>
-
-            {loading ? (
-              <div className="loading-state">Loading available dates...</div>
-            ) : availableDates.length === 0 ? (
-              <div className="empty-state">
-                <p>No available dates configured</p>
-                <button 
-                  className="btn-primary"
-                  onClick={() => setShowManageCalendar(true)}
-                  style={{ marginTop: '12px' }}
-                >
-                  Create Calendar Slots
-                </button>
-              </div>
-            ) : (
-              <div className="dates-grid">
-                {availableDates.map((dateEntry, index) => (
-                  <div key={index} className="date-card">
-                    <div className="date-card-header">
-                      <h3>
-                        {new Date(dateEntry.date).toLocaleDateString('en-US', {
-                          weekday: 'long',
-                          year: 'numeric',
-                          month: 'long',
-                          day: 'numeric'
-                        })}
-                      </h3>
-                    </div>
-                    <div className="date-card-body">
-                      {dateEntry.slots.map((slot, slotIndex) => (
-                        <div key={slotIndex} className="time-slot-item">
-                          <span className="time">{slot.time}</span>
-                          <span className="capacity">
-                            {slot.bookedCount || 0} / {slot.capacity} booked
-                          </span>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-        );
-
-      case 'bookings':
-        return (
-          <div className="section-content">
-            <div className="content-header">
-              <div>
-                <h2>Bookings List</h2>
-                <p className="content-subtitle">View and manage all event bookings</p>
+                <h2>Live Session Bookings</h2>
+                <p className="content-subtitle">Manage session bookings and attendees</p>
               </div>
               <button 
                 className="btn-primary"
@@ -351,9 +243,8 @@ const EventsPage = () => {
               </button>
             </div>
 
-            {loading ? (
-              <div className="loading-state">Loading bookings...</div>
-            ) : bookings.length === 0 ? (
+            {/* Bookings List */}
+            {bookings.length === 0 ? (
               <div className="empty-state">
                 <p>No bookings yet</p>
                 <button 
@@ -372,19 +263,25 @@ const EventsPage = () => {
                       <th>Name</th>
                       <th>Email</th>
                       <th>Mobile</th>
+                      <th>Session</th>
                       <th>Date</th>
-                      <th>Time</th>
+                      <th>Time Slot</th>
                       <th>Status</th>
                     </tr>
                   </thead>
                   <tbody>
                     {bookings.map(booking => (
                       <tr key={booking.id}>
-                        <td>{booking.firstName} {booking.lastName}</td>
+                        <td>{booking.name}</td>
                         <td>{booking.email}</td>
                         <td>{booking.mobile}</td>
-                        <td>{new Date(booking.eventDate).toLocaleDateString()}</td>
-                        <td>{booking.eventTime}</td>
+                        <td>{booking.sessionName}</td>
+                        <td>{new Date(booking.sessionDate).toLocaleDateString('en-US', {
+                          month: 'short',
+                          day: 'numeric',
+                          year: 'numeric'
+                        })}</td>
+                        <td>{booking.timeSlot}</td>
                         <td>
                           <span className={`status-badge ${booking.status || 'confirmed'}`}>
                             {booking.status || 'Confirmed'}
@@ -409,7 +306,7 @@ const EventsPage = () => {
       <div className="page-header">
         <div>
           <h1 className="page-title">Events Management</h1>
-          <p className="page-subtitle">Manage event calendar and bookings</p>
+          <p className="page-subtitle">Manage live sessions and bookings</p>
         </div>
       </div>
 
@@ -419,43 +316,25 @@ const EventsPage = () => {
           <h3 className="sidebar-title">Manage</h3>
           <div className="events-nav-list">
             <button
-              className={`nav-item ${selectedView === 'live-sessions' ? 'active' : ''}`}
-              onClick={() => setSelectedView('live-sessions')}
+              className={`nav-item ${selectedSection === 'live-sessions' ? 'active' : ''}`}
+              onClick={() => setSelectedSection('live-sessions')}
             >
               Live Sessions
             </button>
             <button
-              className={`nav-item ${selectedView === 'available-dates' ? 'active' : ''}`}
-              onClick={() => setSelectedView('available-dates')}
+              className={`nav-item ${selectedSection === 'session-bookings' ? 'active' : ''}`}
+              onClick={() => setSelectedSection('session-bookings')}
             >
-              Available Dates & Times
-            </button>
-            <button
-              className={`nav-item ${selectedView === 'bookings' ? 'active' : ''}`}
-              onClick={() => setSelectedView('bookings')}
-            >
-              Bookings List
+              Session Bookings
             </button>
           </div>
         </div>
 
         {/* Right Column - Content */}
-        {renderContent()}
+        <div className="section-content">
+          {renderSectionContent()}
+        </div>
       </div>
-
-      {showManageCalendar && (
-        <ManageCalendarModal
-          onClose={() => setShowManageCalendar(false)}
-          onSave={handleCalendarSaved}
-        />
-      )}
-
-      {showAddBooking && (
-        <AddBookingModal
-          onClose={() => setShowAddBooking(false)}
-          onBookingAdded={handleBookingAdded}
-        />
-      )}
 
       {showAddLiveSession && (
         <AddLiveSessionModal
@@ -472,6 +351,13 @@ const EventsPage = () => {
             setSelectedSession(null);
           }}
           onSessionUpdated={handleSessionUpdated}
+        />
+      )}
+
+      {showAddBooking && (
+        <AddSessionBookingModal
+          onClose={() => setShowAddBooking(false)}
+          onBookingAdded={handleBookingAdded}
         />
       )}
     </div>

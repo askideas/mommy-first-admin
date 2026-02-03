@@ -230,3 +230,60 @@
   opacity: 0.5;
   cursor: not-allowed;
 }
+
+/* Time Slots Selection for Booking */
+.time-slots-selection {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 12px;
+  margin-top: 8px;
+}
+
+.time-slot-option {
+  padding: 12px 16px;
+  border: 2px solid var(--border);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: all 0.2s;
+  background: white;
+  text-align: center;
+}
+
+.time-slot-option:hover {
+  border-color: var(--primary);
+  background: rgba(220, 95, 146, 0.05);
+}
+
+.time-slot-option.selected {
+  border-color: var(--primary);
+  background: var(--primary-gradient);
+}
+
+.time-slot-option.selected .slot-time-text,
+.time-slot-option.selected .slot-capacity-text {
+  color: white;
+}
+
+.slot-time-text {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin-bottom: 4px;
+}
+
+.slot-capacity-text {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+
+.no-slots-message {
+  padding: 16px;
+  background: var(--background);
+  border-radius: var(--radius-sm);
+  color: var(--text-secondary);
+  font-size: 13px;
+  text-align: center;
+  margin: 8px 0 0 0;
+}
+
