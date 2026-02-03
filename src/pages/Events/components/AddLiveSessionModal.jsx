@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
+import { collection, doc, setDoc, serverTimestamp, getDocs, query, where } from 'firebase/firestore';
 import { db } from '../../../config/firebase';
 import './AddLiveSessionModal.css';
 
@@ -30,6 +30,35 @@ const AddLiveSessionModal = ({ onClose, onSessionAdded }) => {
     const updatedSlots = [...timeSlots];
     updatedSlots[index].capacity = value;
     setTimeSlots(updatedSlots);
+  };
+
+  // Generate custom document ID based on date
+  const generateSessionId = async (dateString) => {
+    // Convert date from YYYY-MM-DD to DDMMYYYY format
+    const [year, month, day] = dateString.split('-');
+    const formattedDate = `${day}${month}${year}`;
+    const baseId = `LV${formattedDate}`;
+
+    // Check if this ID already exists
+    const sessionsRef = collection(db, 'liveSessions');
+    const q = query(sessionsRef, where('date', '==', dateString));
+    const querySnapshot = await getDocs(q);
+
+    if (querySnapshot.empty) {
+      return baseId;
+    }
+
+    // If sessions exist for this date, find the highest suffix
+    const existingIds = querySnapshot.docs.map(doc => doc.id);
+    let suffix = 1;
+
+    while (true) {
+      const newId = `${baseId}-${suffix}`;
+      if (!existingIds.includes(newId)) {
+        return newId;
+      }
+      suffix++;
+    }
   };
 
   const handleSubmit = async (e) => {
@@ -67,8 +96,11 @@ const AddLiveSessionModal = ({ onClose, onSessionAdded }) => {
     try {
       setLoading(true);
 
-      // Save to Firebase
-      await addDoc(collection(db, 'liveSessions'), {
+      // Generate custom session ID
+      const sessionId = await generateSessionId(selectedDate);
+
+      // Save to Firebase with custom ID
+      await setDoc(doc(db, 'liveSessions', sessionId), {
         sessionName: sessionName.trim(),
         date: selectedDate,
         timeSlots: validTimeSlots.map(slot => ({
