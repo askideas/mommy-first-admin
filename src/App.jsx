@@ -6,6 +6,7 @@ import Login from './pages/Login/Login';
 import HomePage from './pages/HomePage/HomePage';
 import AboutPage from './pages/AboutPage/AboutPage';
 import ContactPage from './pages/ContactPage/ContactPage';
+import EnquiryPage from './pages/EnquiryPage/EnquiryPage';
 import Media from './pages/Media/Media';
 import ShopPage from './pages/ShopPage/ShopPage';
 import ReviewsSlider from './pages/ReviewsSlider/ReviewsSlider';
@@ -33,6 +34,7 @@ function App() {
             <Route index element={<HomePage />} />
             <Route path="about" element={<AboutPage />} />
             <Route path="contact" element={<ContactPage />} />
+            <Route path="enquiry" element={<EnquiryPage />} />
             <Route path="media" element={<Media />} />
             <Route path="shop" element={<ShopPage />} />
             <Route path="reviews" element={<ReviewsSlider />} />
