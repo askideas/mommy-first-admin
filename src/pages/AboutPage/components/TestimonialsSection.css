@@ -1,0 +1,66 @@
+/* Import shared styles */
+@import './HeroSection.css';
+
+.testimonials-section-container {
+  width: 100%;
+}
+
+/* Round image preview for author images */
+.image-preview.round {
+  border-radius: 50%;
+  width: 80px;
+  height: 80px;
+}
+
+/* Add Section Button */
+.btn-add-section {
+  width: 100%;
+  padding: 16px;
+  background: white;
+  border: 2px dashed #e0e0e0;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  color: #DC5F92;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin-bottom: 24px;
+}
+
+.btn-add-section:hover {
+  border-color: #DC5F92;
+  background: rgba(220, 95, 146, 0.05);
+}
+
+/* Icon Button Danger */
+.icon-btn-danger {
+  padding: 6px;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  color: #c62828;
+  border-radius: 4px;
+  transition: all 0.2s;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.icon-btn-danger:hover {
+  background: rgba(198, 40, 40, 0.1);
+}
+
+/* Save Section */
+.save-section {
+  background: white;
+  padding: 20px 24px;
+  border-radius: 8px;
+  border: 1px solid #e0e0e0;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}

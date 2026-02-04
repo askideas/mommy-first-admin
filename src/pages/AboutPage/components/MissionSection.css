@@ -1,0 +1,32 @@
+/* Import shared styles */
+@import './HeroSection.css';
+
+.mission-section-container {
+  width: 100%;
+}
+
+/* Color Input Group */
+.color-input-group {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+
+.color-picker {
+  width: 60px;
+  height: 42px;
+  border: 1px solid #e0e0e0;
+  border-radius: 6px;
+  cursor: pointer;
+  padding: 4px;
+  background: white;
+}
+
+.color-picker::-webkit-color-swatch-wrapper {
+  padding: 0;
+}
+
+.color-picker::-webkit-color-swatch {
+  border: none;
+  border-radius: 4px;
+}

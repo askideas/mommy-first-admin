@@ -1,0 +1,6 @@
+/* Import shared styles from HeroSection */
+@import './HeroSection.css';
+
+.heading-prep-section-container {
+  width: 100%;
+}
