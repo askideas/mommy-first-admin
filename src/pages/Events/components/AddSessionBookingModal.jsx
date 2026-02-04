@@ -6,6 +6,7 @@ import './AddLiveSessionModal.css';
 const AddSessionBookingModal = ({ onClose, onBookingAdded }) => {
   const [liveSessions, setLiveSessions] = useState([]);
   const [selectedSession, setSelectedSession] = useState(null);
+  const [selectedDate, setSelectedDate] = useState(null);
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [mobile, setMobile] = useState('');
@@ -20,7 +21,7 @@ const AddSessionBookingModal = ({ onClose, onBookingAdded }) => {
   const fetchActiveSessions = async () => {
     try {
       const sessionsRef = collection(db, 'liveSessions');
-      const q = query(sessionsRef, orderBy('date', 'asc'));
+      const q = query(sessionsRef, orderBy('createdAt', 'desc'));
       const querySnapshot = await getDocs(q);
       
       const today = new Date();
@@ -32,9 +33,15 @@ const AddSessionBookingModal = ({ onClose, onBookingAdded }) => {
           ...doc.data()
         }))
         .filter(session => {
-          const sessionDate = new Date(session.date);
-          sessionDate.setHours(0, 0, 0, 0);
-          return sessionDate >= today;
+          // Filter sessions that have at least one future or today's date
+          if (session.dates && Array.isArray(session.dates)) {
+            return session.dates.some(dateEntry => {
+              const sessionDate = new Date(dateEntry.date);
+              sessionDate.setHours(0, 0, 0, 0);
+              return sessionDate >= today;
+            });
+          }
+          return false;
         });
       
       setLiveSessions(activeSessions);
@@ -46,7 +53,35 @@ const AddSessionBookingModal = ({ onClose, onBookingAdded }) => {
   const handleSessionChange = (sessionId) => {
     const session = liveSessions.find(s => s.id === sessionId);
     setSelectedSession(session);
+    setSelectedDate(null);
     setSelectedTimeSlot(null);
+  };
+
+  const handleDateChange = (dateStr) => {
+    if (!selectedSession) return;
+    const date = selectedSession.dates.find(d => d.date === dateStr);
+    setSelectedDate(date);
+    setSelectedTimeSlot(null);
+  };
+
+  const getAvailableDates = () => {
+    if (!selectedSession || !selectedSession.dates) return [];
+    
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    
+    return selectedSession.dates.filter(dateEntry => {
+      const sessionDate = new Date(dateEntry.date);
+      sessionDate.setHours(0, 0, 0, 0);
+      return sessionDate >= today;
+    });
+  };
+
+  const getAvailableSlots = () => {
+    if (!selectedDate || !selectedDate.timeSlots) return [];
+    return selectedDate.timeSlots.filter(slot => 
+      typeof slot === 'object' && slot.capacity && (slot.booked || 0) < slot.capacity
+    );
   };
 
   const handleSubmit = async (e) => {
@@ -59,18 +94,37 @@ const AddSessionBookingModal = ({ onClose, onBookingAdded }) => {
       return;
     }
 
+    if (!selectedDate) {
+      setError('Please select a date');
+      return;
+    }
+
     if (!name.trim()) {
-      setError('Please enter your name');
+      setError('Please enter name');
       return;
     }
 
     if (!email.trim()) {
-      setError('Please enter your email');
+      setError('Please enter email');
+      return;
+    }
+
+    // Email validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email.trim())) {
+      setError('Please enter a valid email address');
       return;
     }
 
     if (!mobile.trim()) {
-      setError('Please enter your mobile number');
+      setError('Please enter mobile number');
+      return;
+    }
+
+    // Mobile validation (10 digits)
+    const mobileRegex = /^\d{10}$/;
+    if (!mobileRegex.test(mobile.trim())) {
+      setError('Please enter a valid 10-digit mobile number');
       return;
     }
 
@@ -92,29 +146,37 @@ const AddSessionBookingModal = ({ onClose, onBookingAdded }) => {
       await addDoc(collection(db, 'sessionBookings'), {
         sessionId: selectedSession.id,
         sessionName: selectedSession.sessionName,
-        sessionDate: selectedSession.date,
+        sessionDate: selectedDate.date,
         timeSlot: selectedTimeSlot.time,
         name: name.trim(),
-        email: email.trim(),
+        email: email.trim().toLowerCase(),
         mobile: mobile.trim(),
         bookedAt: new Date().toISOString(),
         status: 'confirmed'
       });
 
-      // Update the session's time slot booked count
+      // Update the session's time slot booked count for the specific date
       const sessionRef = doc(db, 'liveSessions', selectedSession.id);
-      const updatedTimeSlots = selectedSession.timeSlots.map(slot => {
-        if (slot.time === selectedTimeSlot.time) {
+      const updatedDates = selectedSession.dates.map(dateEntry => {
+        if (dateEntry.date === selectedDate.date) {
           return {
-            ...slot,
-            booked: (slot.booked || 0) + 1
+            ...dateEntry,
+            timeSlots: dateEntry.timeSlots.map(slot => {
+              if (slot.time === selectedTimeSlot.time) {
+                return {
+                  ...slot,
+                  booked: (slot.booked || 0) + 1
+                };
+              }
+              return slot;
+            })
           };
         }
-        return slot;
+        return dateEntry;
       });
 
       await updateDoc(sessionRef, {
-        timeSlots: updatedTimeSlots
+        dates: updatedDates
       });
 
       onBookingAdded();
@@ -124,13 +186,6 @@ const AddSessionBookingModal = ({ onClose, onBookingAdded }) => {
     } finally {
       setLoading(false);
     }
-  };
-
-  const getAvailableSlots = () => {
-    if (!selectedSession || !selectedSession.timeSlots) return [];
-    return selectedSession.timeSlots.filter(slot => 
-      typeof slot === 'object' && slot.capacity && (slot.booked || 0) < slot.capacity
-    );
   };
 
   return (
@@ -156,76 +211,100 @@ const AddSessionBookingModal = ({ onClose, onBookingAdded }) => {
               <option value="">-- Select a session --</option>
               {liveSessions.map(session => (
                 <option key={session.id} value={session.id}>
-                  {session.sessionName} - {new Date(session.date).toLocaleDateString('en-US', {
-                    month: 'short',
-                    day: 'numeric',
-                    year: 'numeric'
-                  })}
+                  {session.sessionName}
                 </option>
               ))}
             </select>
           </div>
 
-          {/* User Details */}
-          <div className="form-group">
-            <label htmlFor="name">Name *</label>
-            <input
-              type="text"
-              id="name"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              placeholder="Enter your name"
-              className="form-input"
-            />
-          </div>
-
-          <div className="form-group">
-            <label htmlFor="email">Email *</label>
-            <input
-              type="email"
-              id="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder="Enter your email"
-              className="form-input"
-            />
-          </div>
-
-          <div className="form-group">
-            <label htmlFor="mobile">Mobile Number *</label>
-            <input
-              type="tel"
-              id="mobile"
-              value={mobile}
-              onChange={(e) => setMobile(e.target.value)}
-              placeholder="Enter your mobile number"
-              className="form-input"
-            />
-          </div>
-
-          {/* Time Slot Selection */}
+          {/* Date Selection - Only shown after session is selected */}
           {selectedSession && (
             <div className="form-group">
-              <label>Select Time Slot *</label>
-              {getAvailableSlots().length === 0 ? (
-                <p className="no-slots-message">No available time slots for this session</p>
-              ) : (
-                <div className="time-slots-selection">
-                  {getAvailableSlots().map((slot, index) => (
-                    <div
-                      key={index}
-                      className={`time-slot-option ${selectedTimeSlot?.time === slot.time ? 'selected' : ''}`}
-                      onClick={() => setSelectedTimeSlot(slot)}
-                    >
-                      <div className="slot-time-text">{slot.time}</div>
-                      <div className="slot-capacity-text">
-                        {slot.booked || 0}/{slot.capacity} booked
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
+              <label htmlFor="sessionDate">Select Date *</label>
+              <select
+                id="sessionDate"
+                value={selectedDate?.date || ''}
+                onChange={(e) => handleDateChange(e.target.value)}
+                className="form-input"
+              >
+                <option value="">-- Select a date --</option>
+                {getAvailableDates().map((dateEntry, index) => (
+                  <option key={index} value={dateEntry.date}>
+                    {new Date(dateEntry.date).toLocaleDateString('en-US', {
+                      weekday: 'short',
+                      month: 'short',
+                      day: 'numeric',
+                      year: 'numeric'
+                    })}
+                  </option>
+                ))}
+              </select>
             </div>
+          )}
+
+          {/* User Details - Only shown after date is selected */}
+          {selectedDate && (
+            <>
+              <div className="form-group">
+                <label htmlFor="name">Name *</label>
+                <input
+                  type="text"
+                  id="name"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  placeholder="Enter name"
+                  className="form-input"
+                />
+              </div>
+
+              <div className="form-group">
+                <label htmlFor="email">Email *</label>
+                <input
+                  type="email"
+                  id="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="Enter email"
+                  className="form-input"
+                />
+              </div>
+
+              <div className="form-group">
+                <label htmlFor="mobile">Mobile Number *</label>
+                <input
+                  type="tel"
+                  id="mobile"
+                  value={mobile}
+                  onChange={(e) => setMobile(e.target.value)}
+                  placeholder="Enter 10-digit mobile number"
+                  className="form-input"
+                  maxLength="10"
+                />
+              </div>
+
+              {/* Time Slot Selection */}
+              <div className="form-group">
+                <label>Select Time Slot *</label>
+                {getAvailableSlots().length === 0 ? (
+                  <p className="no-slots-message">No available time slots for this date</p>
+                ) : (
+                  <div className="time-slots-selection">
+                    {getAvailableSlots().map((slot, index) => (
+                      <div
+                        key={index}
+                        className={`time-slot-option ${selectedTimeSlot?.time === slot.time ? 'selected' : ''}`}
+                        onClick={() => setSelectedTimeSlot(slot)}
+                      >
+                        <div className="slot-time-text">{slot.time}</div>
+                        <div className="slot-capacity-text">
+                          {slot.booked || 0}/{slot.capacity} booked
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </>
           )}
 
           {/* Actions */}
