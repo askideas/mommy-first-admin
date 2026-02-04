@@ -1,4 +1,4 @@
-import { Home, FileImage, ShoppingBag, Star, HelpCircle, Calendar, Info, Mail, FileText, Heart } from 'lucide-react';
+import { Home, FileImage, ShoppingBag, Star, HelpCircle, Calendar, Info, Mail, FileText, Heart, Users } from 'lucide-react';
 import { Link, useLocation } from 'react-router-dom';
 import './Sidebar.css';
 
@@ -11,6 +11,7 @@ const Sidebar = () => {
     { icon: Mail, label: 'Contact Page', path: '/contact' },
     { icon: FileText, label: 'Enquiry Page', path: '/enquiry' },
     { icon: Heart, label: 'Care Hub Page', path: '/carehub' },
+    { icon: Users, label: 'Affiliate Marketing', path: '/affiliate' },
     { icon: ShoppingBag, label: 'Shop Page', path: '/shop' },
     { icon: Star, label: 'Reviews In Slider', path: '/reviews' },
     { icon: HelpCircle, label: 'FAQs In Slider', path: '/faqs' },

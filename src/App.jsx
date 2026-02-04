@@ -8,6 +8,7 @@ import AboutPage from './pages/AboutPage/AboutPage';
 import ContactPage from './pages/ContactPage/ContactPage';
 import EnquiryPage from './pages/EnquiryPage/EnquiryPage';
 import CareHubPage from './pages/CareHubPage/CareHubPage';
+import AffiliateMarketingPage from './pages/AffiliateMarketingPage/AffiliateMarketingPage';
 import Media from './pages/Media/Media';
 import ShopPage from './pages/ShopPage/ShopPage';
 import ReviewsSlider from './pages/ReviewsSlider/ReviewsSlider';
@@ -37,6 +38,7 @@ function App() {
             <Route path="contact" element={<ContactPage />} />
             <Route path="enquiry" element={<EnquiryPage />} />
             <Route path="carehub" element={<CareHubPage />} />
+            <Route path="affiliate" element={<AffiliateMarketingPage />} />
             <Route path="media" element={<Media />} />
             <Route path="shop" element={<ShopPage />} />
             <Route path="reviews" element={<ReviewsSlider />} />
