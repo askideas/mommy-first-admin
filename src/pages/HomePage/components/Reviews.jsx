@@ -31,6 +31,7 @@ const Reviews = () => {
     descriptionOne: '',
     descriptionTwo: '',
     buttonLabel: '',
+    url: '',
     images: []
   });
   const [savedReviewData, setSavedReviewData] = useState(null);
@@ -202,6 +203,7 @@ const Reviews = () => {
         descriptionOne: '',
         descriptionTwo: '',
         buttonLabel: '',
+        url: '',
         images: []
       });
     }
@@ -349,6 +351,17 @@ const Reviews = () => {
               placeholder="Enter button label"
               value={reviewData.buttonLabel}
               onChange={(e) => handleInputChange('buttonLabel', e.target.value)}
+            />
+          </div>
+
+          <div className="form-group">
+            <label className="form-label">Redirection URL</label>
+            <input
+              type="url"
+              className="form-input"
+              placeholder="Enter URL (e.g., https://example.com or /reviews)"
+              value={reviewData.url}
+              onChange={(e) => handleInputChange('url', e.target.value)}
             />
           </div>
 
