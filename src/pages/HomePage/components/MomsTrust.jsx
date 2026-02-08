@@ -1,10 +1,10 @@
 import { useState, useEffect } from 'react';
-import { ChevronDown, ChevronUp, Plus, X, Upload } from 'lucide-react';
+import { ChevronDown, ChevronUp } from 'lucide-react';
 import { doc, getDoc, setDoc } from 'firebase/firestore';
 import { db } from '../../../config/firebase';
-import './SeeHowItWorks.css';
+import './MomsTrust.css';
 
-const SeeHowItWorks = () => {
+const MomsTrust = () => {
   const [expandedSection, setExpandedSection] = useState(null);
   const [loading, setLoading] = useState(false);
   const [saveStatus, setSaveStatus] = useState({ section: null, status: null });
@@ -20,10 +20,6 @@ const SeeHowItWorks = () => {
     description: ''
   });
   const [savedHeadingData, setSavedHeadingData] = useState(null);
-  
-  // Videos State
-  const [videos, setVideos] = useState([]);
-  const [savedVideos, setSavedVideos] = useState([]);
 
   // Load data from Firebase on component mount
   useEffect(() => {
@@ -40,7 +36,7 @@ const SeeHowItWorks = () => {
     
     try {
       setLoading(true);
-      const docRef = doc(db, 'homepage', 'seehowworks');
+      const docRef = doc(db, 'homepage', 'momstrust');
       const docSnap = await getDoc(docRef);
       
       if (docSnap.exists()) {
@@ -54,11 +50,6 @@ const SeeHowItWorks = () => {
         if (data.heading) {
           setHeadingData(data.heading);
           setSavedHeadingData(data.heading);
-        }
-        
-        if (data.videos) {
-          setVideos(data.videos);
-          setSavedVideos(data.videos);
         }
       }
     } catch (error) {
@@ -75,7 +66,7 @@ const SeeHowItWorks = () => {
   const handleEnableToggle = async (newState) => {
     setIsEnabled(newState);
     try {
-      const docRef = doc(db, 'homepage', 'seehowworks');
+      const docRef = doc(db, 'homepage', 'momstrust');
       const docSnap = await getDoc(docRef);
       const existingData = docSnap.exists() ? docSnap.data() : {};
       
@@ -85,7 +76,7 @@ const SeeHowItWorks = () => {
       });
       
       setSavedIsEnabled(newState);
-      console.log('See How It Works enabled state:', newState);
+      console.log('Moms Trust enabled state:', newState);
     } catch (error) {
       console.error('Error saving enabled state:', error);
       setIsEnabled(!newState);
@@ -102,7 +93,7 @@ const SeeHowItWorks = () => {
       setLoading(true);
       setSaveStatus({ section: 'heading', status: 'saving' });
       
-      const docRef = doc(db, 'homepage', 'seehowworks');
+      const docRef = doc(db, 'homepage', 'momstrust');
       const docSnap = await getDoc(docRef);
       const existingData = docSnap.exists() ? docSnap.data() : {};
       
@@ -132,71 +123,10 @@ const SeeHowItWorks = () => {
     }
   };
 
-  // Video Section Handlers
-  const addVideo = () => {
-    const newVideo = {
-      id: Date.now(),
-      label: '',
-      videoUrl: ''
-    };
-    setVideos([...videos, newVideo]);
-  };
-
-  const removeVideo = (id) => {
-    setVideos(videos.filter(vid => vid.id !== id));
-  };
-
-  const handleVideoLabelChange = (id, value) => {
-    setVideos(videos.map(vid =>
-      vid.id === id ? { ...vid, label: value } : vid
-    ));
-  };
-
-  const handleVideoUrlChange = (id, value) => {
-    setVideos(videos.map(vid =>
-      vid.id === id ? { ...vid, videoUrl: value } : vid
-    ));
-  };
-
-  const handleVideosSave = async () => {
-    try {
-      setLoading(true);
-      setSaveStatus({ section: 'videos', status: 'saving' });
-      
-      const docRef = doc(db, 'homepage', 'seehowworks');
-      const docSnap = await getDoc(docRef);
-      const existingData = docSnap.exists() ? docSnap.data() : {};
-      
-      await setDoc(docRef, {
-        ...existingData,
-        videos: videos
-      });
-      
-      setSavedVideos([...videos]);
-      setSaveStatus({ section: 'videos', status: 'success' });
-      setTimeout(() => setSaveStatus({ section: null, status: null }), 2000);
-      console.log('Videos Saved to Firebase:', videos);
-    } catch (error) {
-      console.error('Error saving videos:', error);
-      setSaveStatus({ section: 'videos', status: 'error' });
-      setTimeout(() => setSaveStatus({ section: null, status: null }), 2000);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleVideosCancel = () => {
-    if (savedVideos.length > 0) {
-      setVideos([...savedVideos]);
-    } else {
-      setVideos([]);
-    }
-  };
-
   return (
-    <div className="see-how-it-works-container">
+    <div className="moms-trust-container">
       <div className="section-header-row">
-        <h2 className="section-main-title">See How It Works Configuration</h2>
+        <h2 className="section-main-title">Moms Trust Configuration</h2>
         <div className="enable-toggle">
           <label className="toggle-label">
             <input
@@ -270,80 +200,8 @@ const SeeHowItWorks = () => {
           </div>
         )}
       </div>
-
-      {/* Video Section */}
-      <div className="config-section">
-        <div className="section-header-static">
-          <span className="section-header-title">Video Section</span>
-          <button className="btn-add-video" onClick={addVideo}>
-            <Plus size={18} />
-            Add Video
-          </button>
-        </div>
-
-        <div className="section-content-area">
-          {videos.length === 0 ? (
-            <div className="empty-state-large">
-              <p>No videos added yet. Click "Add Video" to get started.</p>
-            </div>
-          ) : (
-            <div className="videos-list">
-              {videos.map((video, index) => (
-                <div key={video.id} className="video-item">
-                  <div className="video-header">
-                    <span className="video-number">Video {index + 1}</span>
-                    <button
-                      className="btn-remove-video"
-                      onClick={() => removeVideo(video.id)}
-                    >
-                      <X size={16} />
-                    </button>
-                  </div>
-                  
-                  <div className="video-fields">
-                    <div className="form-group">
-                      <label className="form-label">Label</label>
-                      <input
-                        type="text"
-                        className="form-input"
-                        placeholder="Enter video label"
-                        value={video.label}
-                        onChange={(e) => handleVideoLabelChange(video.id, e.target.value)}
-                      />
-                    </div>
-
-                    <div className="form-group">
-                      <label className="form-label">Video URL</label>
-                      <input
-                        type="url"
-                        className="form-input"
-                        placeholder="Enter video URL (e.g., https://youtube.com/watch?v=... or https://vimeo.com/...)"
-                        value={video.videoUrl}
-                        onChange={(e) => handleVideoUrlChange(video.id, e.target.value)}
-                      />
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-
-          <div className="section-actions">
-            {saveStatus.section === 'videos' && saveStatus.status === 'success' && (
-              <span className="save-status success">Saved successfully!</span>
-            )}
-            {saveStatus.section === 'videos' && saveStatus.status === 'error' && (
-              <span className="save-status error">Error saving data</span>
-            )}
-            <button className="btn-cancel" onClick={handleVideosCancel} disabled={loading}>Cancel</button>
-            <button className="btn-save" onClick={handleVideosSave} disabled={loading}>
-              {loading && saveStatus.section === 'videos' ? 'Saving...' : 'Save'}
-            </button>
-          </div>
-        </div>
-      </div>
     </div>
   );
 };
 
-export default SeeHowItWorks;
+export default MomsTrust;

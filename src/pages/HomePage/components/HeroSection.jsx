@@ -32,7 +32,8 @@ const HeroSection = () => {
     labelText: '',
     description: '',
     buttonLabel: '',
-    backgroundImage: null
+    backgroundImage: null,
+    link: ''
   });
   const [savedLeftSideData, setSavedLeftSideData] = useState(null);
   
@@ -41,7 +42,8 @@ const HeroSection = () => {
     heading: '',
     image: null,
     buttonLabel: '',
-    backgroundImage: null
+    backgroundImage: null,
+    link: ''
   });
   const [savedRightSideData, setSavedRightSideData] = useState(null);
   
@@ -215,7 +217,7 @@ const HeroSection = () => {
     if (savedLeftSideData) {
       setLeftSideData({ ...savedLeftSideData });
     } else {
-      setLeftSideData({ labelText: '', description: '', buttonLabel: '', backgroundImage: null });
+      setLeftSideData({ labelText: '', description: '', buttonLabel: '', backgroundImage: null, link: '' });
     }
   };
 
@@ -247,7 +249,7 @@ const HeroSection = () => {
     } else if (imageKitTarget === 'rightSideBg') {
       setRightSideData(prev => ({ ...prev, backgroundImage: imageUrl }));
     } else if (imageKitTarget === 'slider') {
-      setSliderImages(prev => [...prev, { id: Date.now() + Math.random(), url: imageUrl }]);
+      setSliderImages(prev => [...prev, { id: Date.now() + Math.random(), url: imageUrl, link: '' }]);
     }
     setImageKitTarget(null);
   };
@@ -284,13 +286,19 @@ const HeroSection = () => {
     if (savedRightSideData) {
       setRightSideData({ ...savedRightSideData });
     } else {
-      setRightSideData({ heading: '', image: null, buttonLabel: '', backgroundImage: null });
+      setRightSideData({ heading: '', image: null, buttonLabel: '', backgroundImage: null, link: '' });
     }
   };
 
   // Slider Section Handlers
   const removeSliderImage = (id) => {
     setSliderImages(prev => prev.filter(img => img.id !== id));
+  };
+
+  const handleSliderImageLinkChange = (id, link) => {
+    setSliderImages(prev => 
+      prev.map(img => img.id === id ? { ...img, link } : img)
+    );
   };
 
   const handleSliderSave = async () => {
@@ -455,6 +463,17 @@ const HeroSection = () => {
             </div>
 
             <div className="form-group">
+              <label className="form-label">Redirection Link</label>
+              <input
+                type="url"
+                className="form-input"
+                placeholder="Enter URL (e.g., https://example.com or /shop)"
+                value={leftSideData.link}
+                onChange={(e) => handleLeftSideChange('link', e.target.value)}
+              />
+            </div>
+
+            <div className="form-group">
               <label className="form-label">Background Image</label>
               <div className="image-upload-area">
                 {leftSideData.backgroundImage ? (
@@ -581,6 +600,17 @@ const HeroSection = () => {
             </div>
 
             <div className="form-group">
+              <label className="form-label">Redirection Link</label>
+              <input
+                type="url"
+                className="form-input"
+                placeholder="Enter URL (e.g., https://example.com or /shop)"
+                value={rightSideData.link}
+                onChange={(e) => handleRightSideChange('link', e.target.value)}
+              />
+            </div>
+
+            <div className="form-group">
               <label className="form-label">Background Image</label>
               <div className="image-upload-area">
                 {rightSideData.backgroundImage ? (
@@ -682,6 +712,15 @@ const HeroSection = () => {
                         >
                           Remove
                         </button>
+                      </div>
+                      <div className="slider-image-link-input">
+                        <input
+                          type="url"
+                          className="form-input"
+                          placeholder="Enter redirection link"
+                          value={image.link || ''}
+                          onChange={(e) => handleSliderImageLinkChange(image.id, e.target.value)}
+                        />
                       </div>
                     </div>
                   ))}

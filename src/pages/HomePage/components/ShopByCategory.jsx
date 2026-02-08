@@ -32,7 +32,8 @@ const ShopByCategory = () => {
     label: '',
     heading: '',
     subheading: '',
-    buttonLabel: ''
+    buttonLabel: '',
+    link: ''
   });
   const [savedCategory1Data, setSavedCategory1Data] = useState(null);
   
@@ -42,7 +43,8 @@ const ShopByCategory = () => {
     label: '',
     heading: '',
     subheading: '',
-    buttonLabel: ''
+    buttonLabel: '',
+    link: ''
   });
   const [savedCategory2Data, setSavedCategory2Data] = useState(null);
   
@@ -52,7 +54,8 @@ const ShopByCategory = () => {
     label: '',
     heading: '',
     subheading: '',
-    buttonLabel: ''
+    buttonLabel: '',
+    link: ''
   });
   const [savedCategory3Data, setSavedCategory3Data] = useState(null);
 
@@ -230,7 +233,7 @@ const ShopByCategory = () => {
     if (savedCategory1Data) {
       setCategory1Data({ ...savedCategory1Data });
     } else {
-      setCategory1Data({ image: null, label: '', heading: '', subheading: '', buttonLabel: '' });
+      setCategory1Data({ image: null, label: '', heading: '', subheading: '', buttonLabel: '', link: '' });
     }
   };
 
@@ -274,7 +277,7 @@ const ShopByCategory = () => {
     if (savedCategory2Data) {
       setCategory2Data({ ...savedCategory2Data });
     } else {
-      setCategory2Data({ image: null, label: '', heading: '', subheading: '', buttonLabel: '' });
+      setCategory2Data({ image: null, label: '', heading: '', subheading: '', buttonLabel: '', link: '' });
     }
   };
 
@@ -317,7 +320,7 @@ const ShopByCategory = () => {
     if (savedCategory3Data) {
       setCategory3Data({ ...savedCategory3Data });
     } else {
-      setCategory3Data({ image: null, label: '', heading: '', subheading: '', buttonLabel: '' });
+      setCategory3Data({ image: null, label: '', heading: '', subheading: '', buttonLabel: '', link: '' });
     }
   };
 
@@ -421,6 +424,17 @@ const ShopByCategory = () => {
                 placeholder="Enter button label"
                 value={data.buttonLabel}
                 onChange={(e) => handleChange('buttonLabel', e.target.value)}
+              />
+            </div>
+
+            <div className="form-group">
+              <label className="form-label">Redirection Link</label>
+              <input
+                type="url"
+                className="form-input"
+                placeholder="Enter URL (e.g., https://example.com or /shop)"
+                value={data.link}
+                onChange={(e) => handleChange('link', e.target.value)}
               />
             </div>
 

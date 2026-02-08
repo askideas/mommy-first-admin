@@ -27,7 +27,8 @@ const RecommendedBundles = () => {
   
   // Image Section State
   const [imageData, setImageData] = useState({
-    image: null
+    image: null,
+    link: ''
   });
   const [savedImageData, setSavedImageData] = useState(null);
   
@@ -205,7 +206,7 @@ const RecommendedBundles = () => {
     if (savedImageData) {
       setImageData({ ...savedImageData });
     } else {
-      setImageData({ image: null });
+      setImageData({ image: null, link: '' });
     }
   };
 
@@ -376,6 +377,17 @@ const RecommendedBundles = () => {
                   </button>
                 )}
               </div>
+            </div>
+
+            <div className="form-group">
+              <label className="form-label">Redirection Link</label>
+              <input
+                type="url"
+                className="form-input"
+                placeholder="Enter URL (e.g., https://example.com or /shop)"
+                value={imageData.link}
+                onChange={(e) => setImageData(prev => ({ ...prev, link: e.target.value }))}
+              />
             </div>
 
             <div className="section-actions">

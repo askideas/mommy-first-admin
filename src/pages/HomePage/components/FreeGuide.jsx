@@ -26,7 +26,8 @@ const FreeGuide = () => {
     headingTwo: '',
     description: '',
     buttonLabel: '',
-    flashLabelText: ''
+    flashLabelText: '',
+    url: ''
   });
   const [savedGuideData, setSavedGuideData] = useState(null);
 
@@ -176,7 +177,8 @@ const FreeGuide = () => {
         headingTwo: '',
         description: '',
         buttonLabel: '',
-        flashLabelText: ''
+        flashLabelText: '',
+        url: ''
       });
     }
   };
@@ -323,6 +325,17 @@ const FreeGuide = () => {
               placeholder="Enter flash label text"
               value={guideData.flashLabelText}
               onChange={(e) => handleInputChange('flashLabelText', e.target.value)}
+            />
+          </div>
+
+          <div className="form-group">
+            <label className="form-label">Redirection URL</label>
+            <input
+              type="url"
+              className="form-input"
+              placeholder="Enter URL (e.g., https://example.com or /guide)"
+              value={guideData.url}
+              onChange={(e) => handleInputChange('url', e.target.value)}
             />
           </div>
 

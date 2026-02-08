@@ -1,12 +1,16 @@
 import { useState } from 'react';
 import './HomePage.css';
 import HeroSection from './components/HeroSection';
+import TextSection from './components/TextSection';
 import RecommendedBundles from './components/RecommendedBundles';
 import NewArrivals from './components/NewArrivals';
 import ShopByCategory from './components/ShopByCategory';
+import MomsTrust from './components/MomsTrust';
 import SeeHowItWorks from './components/SeeHowItWorks';
 import Reviews from './components/Reviews';
+import Events from './components/Events';
 import FreeGuide from './components/FreeGuide';
+import Blogs from './components/Blogs';
 
 const HomePage = () => {
   const [selectedSection, setSelectedSection] = useState('hero');
@@ -31,18 +35,26 @@ const HomePage = () => {
     switch (selectedSection) {
       case 'hero':
         return <HeroSection />;
+      case 'text':
+        return <TextSection />;
       case 'recommended-bundles':
         return <RecommendedBundles />;
       case 'new-arrivals':
         return <NewArrivals />;
       case 'shop-by-category':
         return <ShopByCategory />;
+      case 'moms-trust':
+        return <MomsTrust />;
       case 'how-it-works':
         return <SeeHowItWorks />;
       case 'reviews':
         return <Reviews />;
+      case 'events':
+        return <Events />;
       case 'free-guide':
         return <FreeGuide />;
+      case 'blogs':
+        return <Blogs />;
       default:
         return (
           <div className="section-content-empty">

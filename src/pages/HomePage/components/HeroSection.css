@@ -430,6 +430,27 @@
   background: rgba(239, 68, 68, 0.1);
 }
 
+.slider-image-link-input {
+  padding: 8px;
+  background: #fff;
+  border-top: 1px solid #e0e0e0;
+}
+
+.slider-image-link-input input {
+  width: 100%;
+  padding: 6px 8px;
+  font-size: 12px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+}
+
+.slider-image-link-input input:focus {
+  outline: none;
+  border-color: #DC5F92;
+  box-shadow: 0 0 0 3px rgba(220, 95, 146, 0.1);
+}
+
 .remove-slider-image-btn {
   position: absolute;
   top: 6px;
