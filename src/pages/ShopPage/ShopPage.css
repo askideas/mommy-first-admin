@@ -4,68 +4,68 @@
 }
 
 .page-header {
-  margin-bottom: 20px;
+  margin-bottom: 16px;
 }
 
 .page-title {
-  font-size: 24px;
+  font-size: 20px;
   font-weight: 700;
-  letter-spacing: -0.5px;
+  letter-spacing: -0.4px;
   color: #1a1a1a;
   margin: 0;
 }
 
 .page-subtitle {
-  font-size: 12px;
+  font-size: 11px;
   color: #666;
-  margin: 4px 0 0 0;
+  margin: 3px 0 0 0;
   letter-spacing: -0.1px;
 }
 
 /* Two Column Layout */
 .shoppage-layout {
   display: grid;
-  grid-template-columns: 280px 1fr;
-  gap: 20px;
-  min-height: calc(100vh - 150px);
+  grid-template-columns: 220px 1fr;
+  gap: 16px;
+  min-height: calc(100vh - 130px);
 }
 
 /* Left Sidebar - Sections List */
 .sections-sidebar {
   background: white;
   border: 1px solid #e0e0e0;
-  border-radius: 8px;
-  padding: 20px;
+  border-radius: 6px;
+  padding: 14px;
   height: fit-content;
   position: sticky;
-  top: 20px;
+  top: 16px;
 }
 
 .sidebar-title {
-  font-size: 14px;
+  font-size: 11px;
   font-weight: 700;
   color: #1a1a1a;
-  margin: 0 0 16px 0;
-  letter-spacing: -0.2px;
+  margin: 0 0 12px 0;
+  letter-spacing: 0.3px;
   text-transform: uppercase;
 }
 
 .sections-list {
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 4px;
 }
 
 .section-item {
   background: transparent;
   border: none;
-  padding: 12px 16px;
-  font-size: 13px;
+  padding: 8px 12px;
+  font-size: 12px;
   font-weight: 500;
   color: #666;
   cursor: pointer;
   transition: all 0.2s;
-  border-radius: 6px;
+  border-radius: 5px;
   text-align: left;
   letter-spacing: -0.1px;
   border: 1px solid transparent;
@@ -88,9 +88,9 @@
 .section-content {
   background: white;
   border: 1px solid #e0e0e0;
-  border-radius: 8px;
-  padding: 24px;
-  min-height: 500px;
+  border-radius: 6px;
+  padding: 18px;
+  min-height: 400px;
 }
 
 .section-content-empty {
@@ -99,20 +99,20 @@
   align-items: center;
   justify-content: center;
   height: 100%;
-  min-height: 400px;
+  min-height: 300px;
   text-align: center;
 }
 
 .section-content-empty h2 {
-  font-size: 20px;
+  font-size: 16px;
   font-weight: 700;
   color: #1a1a1a;
-  margin: 0 0 8px 0;
-  letter-spacing: -0.4px;
+  margin: 0 0 6px 0;
+  letter-spacing: -0.3px;
 }
 
 .section-content-empty p {
-  font-size: 13px;
+  font-size: 12px;
   color: #666;
   margin: 0;
   letter-spacing: -0.1px;
@@ -121,56 +121,56 @@
 /* Responsive */
 @media (max-width: 1024px) {
   .shoppage-layout {
-    grid-template-columns: 240px 1fr;
-    gap: 16px;
+    grid-template-columns: 200px 1fr;
+    gap: 12px;
   }
 
   .sections-sidebar {
-    padding: 16px;
+    padding: 12px;
   }
 
   .section-content {
-    padding: 20px;
+    padding: 16px;
   }
 }
 
 @media (max-width: 768px) {
   .page-title {
-    font-size: 20px;
+    font-size: 18px;
   }
 
   .shoppage-layout {
     grid-template-columns: 1fr;
-    gap: 16px;
+    gap: 12px;
   }
 
   .sections-sidebar {
     position: static;
-    padding: 16px;
+    padding: 12px;
   }
 
   .sections-list {
     display: grid;
     grid-template-columns: repeat(2, 1fr);
-    gap: 8px;
+    gap: 6px;
   }
 
   .section-item {
-    padding: 10px 12px;
-    font-size: 12px;
+    padding: 8px 10px;
+    font-size: 11px;
     text-align: center;
   }
 
   .section-content {
-    padding: 16px;
+    padding: 14px;
   }
 
   .section-content-empty {
-    min-height: 300px;
+    min-height: 250px;
   }
 
   .section-content-empty h2 {
-    font-size: 18px;
+    font-size: 15px;
   }
 }
 

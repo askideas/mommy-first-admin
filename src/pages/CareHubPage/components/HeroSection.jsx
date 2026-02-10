@@ -1,5 +1,5 @@
-import { useState, useEffect } from 'react';
-import { ChevronDown, ChevronUp, Plus, Trash2 } from 'lucide-react';
+﻿import { useState, useEffect } from 'react';
+import { ChevronDown, ChevronUp } from 'lucide-react';
 import { doc, getDoc, setDoc } from 'firebase/firestore';
 import { db } from '../../../config/firebase';
 import ImageKitBrowser from '../../../components/ImageKitBrowser';
@@ -8,25 +8,42 @@ import './CareHubSection.css';
 const HeroSection = () => {
   const [expandedSection, setExpandedSection] = useState(null);
   const [loading, setLoading] = useState(false);
-  const [saveStatus, setSaveStatus] = useState({ section: null, status: null });
+  const [saveStatus, setSaveStatus] = useState({ status: null });
   const [isImageKitOpen, setIsImageKitOpen] = useState(false);
   const [currentImageField, setCurrentImageField] = useState(null);
-  
-  const [isEnabled, setIsEnabled] = useState(true);
-  const [savedIsEnabled, setSavedIsEnabled] = useState(true);
-  
-  const [heroData, setHeroData] = useState({
-    topLabel: 'CARE HUB',
-    heading: 'Support for every stage of motherhood',
-    mainImage: '',
-    infoBubbles: [],
-    buttons: [
-      { id: 1, text: 'Care Guides', link: '#care-guides', backgroundColor: '#DC5F92', textColor: '#FFFFFF' },
-      { id: 2, text: 'The Journal', link: '/journal', backgroundColor: '#FFFFFF', textColor: '#DC5F92' },
-      { id: 3, text: 'Get Support', link: '/support', backgroundColor: '#DC2626', textColor: '#FFFFFF' }
-    ]
+
+  // Hero Content
+  const [heroContent, setHeroContent] = useState({
+    heading: '',
+    subheading: '',
+    description: '',
+    image: ''
   });
-  const [savedHeroData, setSavedHeroData] = useState(null);
+
+  // Three Label Items
+  const [labelItems, setLabelItems] = useState([
+    { id: 1, label1: '', label2: '' },
+    { id: 2, label1: '', label2: '' },
+    { id: 3, label1: '', label2: '' }
+  ]);
+
+  // Five Bubbles
+  const [bubbles, setBubbles] = useState([
+    { id: 1, image: '', description: '', location: '', time: '' },
+    { id: 2, image: '', description: '', location: '', time: '' },
+    { id: 3, image: '', description: '', location: '', time: '' },
+    { id: 4, image: '', description: '', location: '', time: '' },
+    { id: 5, image: '', description: '', location: '', time: '' }
+  ]);
+
+  // Three Buttons
+  const [buttons, setButtons] = useState([
+    { id: 1, label: '', link: '' },
+    { id: 2, label: '', link: '' },
+    { id: 3, label: '', link: '' }
+  ]);
+
+  const [savedData, setSavedData] = useState(null);
 
   useEffect(() => {
     if (db) {
@@ -35,31 +52,25 @@ const HeroSection = () => {
   }, []);
 
   const loadDataFromFirebase = async () => {
-    if (!db) {
-      console.error('Firebase not initialized');
-      return;
-    }
-    
+    if (!db) return;
+
     try {
       setLoading(true);
       const docRef = doc(db, 'carehubpage', 'herosection');
       const docSnap = await getDoc(docRef);
-      
+
       if (docSnap.exists()) {
         const data = docSnap.data();
-        
-        if (data.isEnabled !== undefined) {
-          setIsEnabled(data.isEnabled);
-          setSavedIsEnabled(data.isEnabled);
-        }
-        
-        if (data.heroData) {
-          setHeroData(data.heroData);
-          setSavedHeroData(data.heroData);
-        }
+
+        if (data.heroContent) setHeroContent(data.heroContent);
+        if (data.labelItems) setLabelItems(data.labelItems);
+        if (data.bubbles) setBubbles(data.bubbles);
+        if (data.buttons) setButtons(data.buttons);
+
+        setSavedData(data);
       }
     } catch (error) {
-      console.error('Error loading data from Firebase:', error);
+      console.error('Error loading data:', error);
     } finally {
       setLoading(false);
     }
@@ -67,35 +78,32 @@ const HeroSection = () => {
 
   const saveToFirebase = async () => {
     if (!db) {
-      console.error('Firebase not initialized');
-      setSaveStatus({ section: 'hero', status: 'error' });
-      setTimeout(() => setSaveStatus({ section: null, status: null }), 3000);
+      setSaveStatus({ status: 'error' });
+      setTimeout(() => setSaveStatus({ status: null }), 3000);
       return;
     }
 
     try {
       setLoading(true);
-      setSaveStatus({ section: 'hero', status: 'saving' });
-      
+      setSaveStatus({ status: 'saving' });
+
       const docRef = doc(db, 'carehubpage', 'herosection');
-      
       const dataToSave = {
-        isEnabled,
-        heroData,
+        heroContent,
+        labelItems,
+        bubbles,
+        buttons,
         updatedAt: new Date().toISOString()
       };
-      
+
       await setDoc(docRef, dataToSave, { merge: true });
-      
-      setSavedIsEnabled(isEnabled);
-      setSavedHeroData({ ...heroData });
-      
-      setSaveStatus({ section: 'hero', status: 'success' });
-      setTimeout(() => setSaveStatus({ section: null, status: null }), 3000);
+      setSavedData(dataToSave);
+      setSaveStatus({ status: 'success' });
+      setTimeout(() => setSaveStatus({ status: null }), 3000);
     } catch (error) {
-      console.error('Error saving to Firebase:', error);
-      setSaveStatus({ section: 'hero', status: 'error' });
-      setTimeout(() => setSaveStatus({ section: null, status: null }), 3000);
+      console.error('Error saving:', error);
+      setSaveStatus({ status: 'error' });
+      setTimeout(() => setSaveStatus({ status: null }), 3000);
     } finally {
       setLoading(false);
     }
@@ -106,8 +114,14 @@ const HeroSection = () => {
   };
 
   const hasUnsavedChanges = () => {
-    return isEnabled !== savedIsEnabled || 
-           JSON.stringify(heroData) !== JSON.stringify(savedHeroData);
+    if (!savedData) return true;
+    const currentData = { heroContent, labelItems, bubbles, buttons };
+    return JSON.stringify(currentData) !== JSON.stringify({
+      heroContent: savedData.heroContent,
+      labelItems: savedData.labelItems,
+      bubbles: savedData.bubbles,
+      buttons: savedData.buttons
+    });
   };
 
   const handleSelectImage = (field) => {
@@ -116,115 +130,82 @@ const HeroSection = () => {
   };
 
   const handleImageSelected = (imageUrl) => {
-    if (currentImageField === 'mainImage') {
-      setHeroData(prev => ({ ...prev, mainImage: imageUrl }));
+    if (currentImageField === 'heroImage') {
+      setHeroContent(prev => ({ ...prev, image: imageUrl }));
     } else if (currentImageField?.startsWith('bubble-')) {
       const bubbleId = parseInt(currentImageField.split('-')[1]);
-      setHeroData(prev => ({
-        ...prev,
-        infoBubbles: prev.infoBubbles.map(bubble =>
-          bubble.id === bubbleId ? { ...bubble, image: imageUrl } : bubble
-        )
-      }));
+      setBubbles(prev => prev.map(b => b.id === bubbleId ? { ...b, image: imageUrl } : b));
     }
     setIsImageKitOpen(false);
     setCurrentImageField(null);
   };
 
-  const addInfoBubble = () => {
-    const newBubble = {
-      id: Date.now(),
-      image: '',
-      text: ''
-    };
-    setHeroData(prev => ({
-      ...prev,
-      infoBubbles: [...prev.infoBubbles, newBubble]
-    }));
+  const updateLabelItem = (id, field, value) => {
+    setLabelItems(prev => prev.map(item => item.id === id ? { ...item, [field]: value } : item));
   };
 
-  const removeInfoBubble = (bubbleId) => {
-    setHeroData(prev => ({
-      ...prev,
-      infoBubbles: prev.infoBubbles.filter(bubble => bubble.id !== bubbleId)
-    }));
+  const updateBubble = (id, field, value) => {
+    setBubbles(prev => prev.map(b => b.id === id ? { ...b, [field]: value } : b));
   };
 
-  const updateInfoBubble = (bubbleId, field, value) => {
-    setHeroData(prev => ({
-      ...prev,
-      infoBubbles: prev.infoBubbles.map(bubble =>
-        bubble.id === bubbleId ? { ...bubble, [field]: value } : bubble
-      )
-    }));
-  };
-
-  const updateButton = (buttonId, field, value) => {
-    setHeroData(prev => ({
-      ...prev,
-      buttons: prev.buttons.map(btn =>
-        btn.id === buttonId ? { ...btn, [field]: value } : btn
-      )
-    }));
+  const updateButton = (id, field, value) => {
+    setButtons(prev => prev.map(btn => btn.id === id ? { ...btn, [field]: value } : btn));
   };
 
   return (
     <div className="carehub-section-container">
       <div className="section-header-row">
-        <h2 className="section-main-title">Hero Section Configuration</h2>
-        <div className="enable-toggle">
-          <label className="toggle-label">
-            <input
-              type="checkbox"
-              className="toggle-checkbox"
-              checked={isEnabled}
-              onChange={(e) => setIsEnabled(e.target.checked)}
-            />
-            <span className="toggle-text">{isEnabled ? 'Enabled' : 'Disabled'}</span>
-          </label>
-        </div>
+        <h2 className="section-main-title">Hero Section</h2>
       </div>
 
-      {/* Basic Content */}
+      {/* Hero Content */}
       <div className="config-section">
-        <button
-          className="section-header"
-          onClick={() => toggleSection('content')}
-        >
+        <button className="section-header" onClick={() => toggleSection('content')}>
           <div className="section-header-title">Hero Content</div>
-          {expandedSection === 'content' ? <ChevronUp size={20} /> : <ChevronDown size={20} />}
+          {expandedSection === 'content' ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
         </button>
 
         {expandedSection === 'content' && (
           <div className="section-content">
             <div className="form-grid">
               <div className="form-group full-width">
-                <label className="form-label">Top Label</label>
-                <input
-                  type="text"
-                  className="form-input"
-                  value={heroData.topLabel}
-                  onChange={(e) => setHeroData(prev => ({ ...prev, topLabel: e.target.value }))}
-                  placeholder="e.g., CARE HUB"
-                />
-              </div>
-
-              <div className="form-group full-width">
                 <label className="form-label">Heading</label>
                 <input
                   type="text"
                   className="form-input"
-                  value={heroData.heading}
-                  onChange={(e) => setHeroData(prev => ({ ...prev, heading: e.target.value }))}
-                  placeholder="e.g., Support for every stage of motherhood"
+                  value={heroContent.heading}
+                  onChange={(e) => setHeroContent(prev => ({ ...prev, heading: e.target.value }))}
+                  placeholder="Enter heading"
                 />
               </div>
 
               <div className="form-group full-width">
-                <label className="form-label">Main Image</label>
+                <label className="form-label">Subheading</label>
+                <input
+                  type="text"
+                  className="form-input"
+                  value={heroContent.subheading}
+                  onChange={(e) => setHeroContent(prev => ({ ...prev, subheading: e.target.value }))}
+                  placeholder="Enter subheading"
+                />
+              </div>
+
+              <div className="form-group full-width">
+                <label className="form-label">Description</label>
+                <textarea
+                  className="form-textarea"
+                  rows={3}
+                  value={heroContent.description}
+                  onChange={(e) => setHeroContent(prev => ({ ...prev, description: e.target.value }))}
+                  placeholder="Enter description"
+                />
+              </div>
+
+              <div className="form-group full-width">
+                <label className="form-label">Image</label>
                 <div className="image-preview-container">
-                  {heroData.mainImage ? (
-                    <img src={heroData.mainImage} alt="Hero" className="image-preview" />
+                  {heroContent.image ? (
+                    <img src={heroContent.image} alt="Hero" className="image-preview" />
                   ) : (
                     <div className="image-placeholder">No image selected</div>
                   )}
@@ -232,7 +213,7 @@ const HeroSection = () => {
                 <button
                   type="button"
                   className="btn-secondary select-image-btn"
-                  onClick={() => handleSelectImage('mainImage')}
+                  onClick={() => handleSelectImage('heroImage')}
                 >
                   Select Image
                 </button>
@@ -242,41 +223,73 @@ const HeroSection = () => {
         )}
       </div>
 
-      {/* Info Bubbles */}
+      {/* Label Items */}
       <div className="config-section">
-        <button
-          className="section-header"
-          onClick={() => toggleSection('bubbles')}
-        >
-          <div className="section-header-title">Info Bubbles</div>
-          {expandedSection === 'bubbles' ? <ChevronUp size={20} /> : <ChevronDown size={20} />}
+        <button className="section-header" onClick={() => toggleSection('labels')}>
+          <div className="section-header-title">Label Items (3)</div>
+          {expandedSection === 'labels' ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
+        </button>
+
+        {expandedSection === 'labels' && (
+          <div className="section-content">
+            <div className="cards-list">
+              {labelItems.map((item, index) => (
+                <div key={item.id} className="card-item">
+                  <div className="card-item-header">
+                    <span className="card-item-title">Label Item {index + 1}</span>
+                  </div>
+                  <div className="form-grid">
+                    <div className="form-group">
+                      <label className="form-label">Label 1</label>
+                      <input
+                        type="text"
+                        className="form-input"
+                        value={item.label1}
+                        onChange={(e) => updateLabelItem(item.id, 'label1', e.target.value)}
+                        placeholder="Enter label 1"
+                      />
+                    </div>
+                    <div className="form-group">
+                      <label className="form-label">Label 2</label>
+                      <input
+                        type="text"
+                        className="form-input"
+                        value={item.label2}
+                        onChange={(e) => updateLabelItem(item.id, 'label2', e.target.value)}
+                        placeholder="Enter label 2"
+                      />
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* Bubbles */}
+      <div className="config-section">
+        <button className="section-header" onClick={() => toggleSection('bubbles')}>
+          <div className="section-header-title">Bubbles (5)</div>
+          {expandedSection === 'bubbles' ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
         </button>
 
         {expandedSection === 'bubbles' && (
           <div className="section-content">
             <div className="cards-list">
-              {heroData.infoBubbles.map((bubble, index) => (
+              {bubbles.map((bubble, index) => (
                 <div key={bubble.id} className="card-item">
                   <div className="card-item-header">
                     <span className="card-item-title">Bubble {index + 1}</span>
-                    <button
-                      type="button"
-                      className="btn-danger"
-                      onClick={() => removeInfoBubble(bubble.id)}
-                    >
-                      <Trash2 size={16} />
-                      Remove
-                    </button>
                   </div>
-                  
                   <div className="form-grid">
                     <div className="form-group full-width">
-                      <label className="form-label">Bubble Image</label>
-                      <div className="image-preview-container" style={{ height: '120px' }}>
+                      <label className="form-label">Image</label>
+                      <div className="image-preview-container" style={{ height: '100px' }}>
                         {bubble.image ? (
-                          <img src={bubble.image} alt="Bubble" className="image-preview" />
+                          <img src={bubble.image} alt={`Bubble ${index + 1}`} className="image-preview" />
                         ) : (
-                          <div className="image-placeholder">No image selected</div>
+                          <div className="image-placeholder">No image</div>
                         )}
                       </div>
                       <button
@@ -287,110 +300,79 @@ const HeroSection = () => {
                         Select Image
                       </button>
                     </div>
-
                     <div className="form-group full-width">
-                      <label className="form-label">Bubble Text</label>
-                      <textarea
-                        className="form-textarea"
-                        rows={2}
-                        value={bubble.text}
-                        onChange={(e) => updateInfoBubble(bubble.id, 'text', e.target.value)}
-                        placeholder="Enter bubble text..."
+                      <label className="form-label">Description</label>
+                      <input
+                        type="text"
+                        className="form-input"
+                        value={bubble.description}
+                        onChange={(e) => updateBubble(bubble.id, 'description', e.target.value)}
+                        placeholder="Enter description"
+                      />
+                    </div>
+                    <div className="form-group">
+                      <label className="form-label">Location</label>
+                      <input
+                        type="text"
+                        className="form-input"
+                        value={bubble.location}
+                        onChange={(e) => updateBubble(bubble.id, 'location', e.target.value)}
+                        placeholder="Enter location"
+                      />
+                    </div>
+                    <div className="form-group">
+                      <label className="form-label">Time</label>
+                      <input
+                        type="text"
+                        className="form-input"
+                        value={bubble.time}
+                        onChange={(e) => updateBubble(bubble.id, 'time', e.target.value)}
+                        placeholder="Enter time"
                       />
                     </div>
                   </div>
                 </div>
               ))}
             </div>
-
-            <button
-              type="button"
-              className="btn-secondary add-item-btn"
-              onClick={addInfoBubble}
-            >
-              <Plus size={16} />
-              Add Info Bubble
-            </button>
           </div>
         )}
       </div>
 
-      {/* CTA Buttons */}
+      {/* Buttons */}
       <div className="config-section">
-        <button
-          className="section-header"
-          onClick={() => toggleSection('buttons')}
-        >
-          <div className="section-header-title">CTA Buttons</div>
-          {expandedSection === 'buttons' ? <ChevronUp size={20} /> : <ChevronDown size={20} />}
+        <button className="section-header" onClick={() => toggleSection('buttons')}>
+          <div className="section-header-title">Buttons (3)</div>
+          {expandedSection === 'buttons' ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
         </button>
 
         {expandedSection === 'buttons' && (
           <div className="section-content">
             <div className="cards-list">
-              {heroData.buttons.map((button, index) => (
-                <div key={button.id} className="card-item">
+              {buttons.map((btn, index) => (
+                <div key={btn.id} className="card-item">
                   <div className="card-item-header">
                     <span className="card-item-title">Button {index + 1}</span>
                   </div>
-                  
                   <div className="form-grid">
                     <div className="form-group">
-                      <label className="form-label">Button Text</label>
+                      <label className="form-label">Label</label>
                       <input
                         type="text"
                         className="form-input"
-                        value={button.text}
-                        onChange={(e) => updateButton(button.id, 'text', e.target.value)}
-                        placeholder="e.g., Care Guides"
+                        value={btn.label}
+                        onChange={(e) => updateButton(btn.id, 'label', e.target.value)}
+                        placeholder="Enter button label"
                       />
                     </div>
-
                     <div className="form-group">
-                      <label className="form-label">Button Link</label>
+                      <label className="form-label">Link</label>
                       <input
                         type="text"
                         className="form-input"
-                        value={button.link}
-                        onChange={(e) => updateButton(button.id, 'link', e.target.value)}
-                        placeholder="e.g., #care-guides"
+                        value={btn.link}
+                        onChange={(e) => updateButton(btn.id, 'link', e.target.value)}
+                        placeholder="Enter button link"
                       />
-                    </div>
-
-                    <div className="form-group">
-                      <label className="form-label">Background Color</label>
-                      <div className="color-input-group">
-                        <input
-                          type="color"
-                          className="color-picker"
-                          value={button.backgroundColor}
-                          onChange={(e) => updateButton(button.id, 'backgroundColor', e.target.value)}
-                        />
-                        <input
-                          type="text"
-                          className="form-input"
-                          value={button.backgroundColor}
-                          onChange={(e) => updateButton(button.id, 'backgroundColor', e.target.value)}
-                        />
-                      </div>
-                    </div>
-
-                    <div className="form-group">
-                      <label className="form-label">Text Color</label>
-                      <div className="color-input-group">
-                        <input
-                          type="color"
-                          className="color-picker"
-                          value={button.textColor}
-                          onChange={(e) => updateButton(button.id, 'textColor', e.target.value)}
-                        />
-                        <input
-                          type="text"
-                          className="form-input"
-                          value={button.textColor}
-                          onChange={(e) => updateButton(button.id, 'textColor', e.target.value)}
-                        />
-                      </div>
                     </div>
                   </div>
                 </div>
@@ -400,21 +382,19 @@ const HeroSection = () => {
         )}
       </div>
 
-      {/* Save Section */}
+      {/* Save Button */}
       <div className="section-actions">
         <button
           className="btn-primary"
           onClick={saveToFirebase}
           disabled={loading || !hasUnsavedChanges()}
         >
-          {saveStatus.section === 'hero' && saveStatus.status === 'saving'
-            ? 'Saving...'
-            : 'Save Hero Section'}
+          {saveStatus.status === 'saving' ? 'Saving...' : 'Save Hero Section'}
         </button>
-        {saveStatus.section === 'hero' && saveStatus.status === 'success' && (
+        {saveStatus.status === 'success' && (
           <span className="save-status success">Saved successfully!</span>
         )}
-        {saveStatus.section === 'hero' && saveStatus.status === 'error' && (
+        {saveStatus.status === 'error' && (
           <span className="save-status error">Error saving data</span>
         )}
       </div>

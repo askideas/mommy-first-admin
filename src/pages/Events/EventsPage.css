@@ -4,30 +4,30 @@
 }
 
 .page-header {
-  margin-bottom: 20px;
+  margin-bottom: 16px;
 }
 
 .page-title {
-  font-size: 24px;
+  font-size: 20px;
   font-weight: 700;
-  letter-spacing: -0.5px;
+  letter-spacing: -0.4px;
   color: var(--text-primary);
   margin: 0;
 }
 
 .page-subtitle {
-  font-size: 12px;
+  font-size: 11px;
   color: var(--text-secondary);
-  margin: 4px 0 0 0;
+  margin: 3px 0 0 0;
   letter-spacing: -0.1px;
 }
 
 /* Two Column Layout */
 .events-layout {
   display: grid;
-  grid-template-columns: 280px 1fr;
-  gap: 20px;
-  min-height: calc(100vh - 150px);
+  grid-template-columns: 220px 1fr;
+  gap: 16px;
+  min-height: calc(100vh - 130px);
 }
 
 /* Left Sidebar - Navigation */
@@ -35,32 +35,32 @@
   background: white;
   border: 1px solid var(--border);
   border-radius: var(--radius-md);
-  padding: 20px;
+  padding: 14px;
   height: fit-content;
   position: sticky;
-  top: 20px;
+  top: 16px;
 }
 
 .sidebar-title {
-  font-size: 14px;
+  font-size: 11px;
   font-weight: 700;
   color: var(--text-primary);
-  margin: 0 0 16px 0;
-  letter-spacing: -0.2px;
+  margin: 0 0 12px 0;
+  letter-spacing: 0.3px;
   text-transform: uppercase;
 }
 
 .events-nav-list {
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 4px;
 }
 
 .nav-item {
   background: transparent;
   border: none;
-  padding: 12px 16px;
-  font-size: 13px;
+  padding: 8px 12px;
+  font-size: 12px;
   font-weight: 500;
   color: var(--text-secondary);
   cursor: pointer;
@@ -89,15 +89,15 @@
   background: white;
   border: 1px solid var(--border);
   border-radius: var(--radius-md);
-  padding: 24px;
-  min-height: 500px;
+  padding: 18px;
+  min-height: 400px;
 }
 
 .content-header {
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
-  margin-bottom: 24px;
+  margin-bottom: 18px;
   gap: 16px;
 }
 

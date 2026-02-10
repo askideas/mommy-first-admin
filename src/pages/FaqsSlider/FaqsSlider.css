@@ -4,21 +4,21 @@
 }
 
 .page-header {
-  margin-bottom: 20px;
+  margin-bottom: 16px;
 }
 
 .page-title {
-  font-size: 24px;
+  font-size: 20px;
   font-weight: 700;
-  letter-spacing: -0.5px;
+  letter-spacing: -0.4px;
   color: #1a1a1a;
   margin: 0;
 }
 
 .page-subtitle {
-  font-size: 12px;
+  font-size: 11px;
   color: #666;
-  margin: 4px 0 0 0;
+  margin: 3px 0 0 0;
   letter-spacing: -0.1px;
 }
 
@@ -26,8 +26,8 @@
 .faqs-container {
   background: white;
   border: 1px solid #e0e0e0;
-  border-radius: 8px;
-  padding: 20px;
+  border-radius: 6px;
+  padding: 16px;
 }
 
 .section-header {
@@ -37,25 +37,25 @@
 }
 
 .section-title {
-  font-size: 16px;
+  font-size: 14px;
   font-weight: 700;
   color: #1a1a1a;
   margin: 0;
-  letter-spacing: -0.3px;
+  letter-spacing: -0.2px;
 }
 
 .btn-add-item {
   background: linear-gradient(218.44deg, #FD8CBB 4.36%, #DC5F92 86.2%);
   color: white;
   border: none;
-  padding: 8px 16px;
-  border-radius: 6px;
-  font-size: 13px;
+  padding: 6px 14px;
+  border-radius: 5px;
+  font-size: 12px;
   font-weight: 600;
   cursor: pointer;
   display: inline-flex;
   align-items: center;
-  gap: 6px;
+  gap: 5px;
   transition: all 0.2s;
 }
 
@@ -68,32 +68,32 @@
 .faq-form {
   background: #fafafa;
   border: 1px solid #e0e0e0;
-  border-radius: 8px;
-  padding: 16px;
-  margin-bottom: 20px;
+  border-radius: 6px;
+  padding: 14px;
+  margin-bottom: 16px;
 }
 
 .form-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 16px;
+  margin-bottom: 14px;
 }
 
 .form-header h3 {
   margin: 0;
-  font-size: 16px;
+  font-size: 14px;
   font-weight: 700;
   color: #1a1a1a;
-  letter-spacing: -0.3px;
+  letter-spacing: -0.2px;
 }
 
 .close-button {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 28px;
-  height: 28px;
+  width: 24px;
+  height: 24px;
   background: none;
   border: none;
   color: #666;
