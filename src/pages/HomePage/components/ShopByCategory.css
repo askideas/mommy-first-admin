@@ -203,16 +203,17 @@
 /* Image Preview */
 .image-preview {
   position: relative;
-  width: 100%;
-  max-width: 400px;
+  width: 120px;
+  height: 80px;
   border-radius: 8px;
-  overflow: visible;
+  overflow: hidden;
   margin: 0 auto;
 }
 
 .image-preview img {
   width: 100%;
-  height: auto;
+  height: 100%;
+  object-fit: cover;
   display: block;
   border-radius: 8px;
 }

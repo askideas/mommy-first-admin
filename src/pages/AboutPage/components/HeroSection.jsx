@@ -29,6 +29,13 @@ const HeroSection = () => {
   });
   const [savedHeroData, setSavedHeroData] = useState(null);
 
+  // Content Section State
+  const [contentSection, setContentSection] = useState({
+    enabled: true,
+    content: ''
+  });
+  const [savedContentSection, setSavedContentSection] = useState({ enabled: true, content: '' });
+
   // Load data from Firebase on component mount
   useEffect(() => {
     if (db) {
@@ -62,6 +69,12 @@ const HeroSection = () => {
           setHeroData(data.heroData);
           setSavedHeroData(data.heroData);
         }
+        
+        // Load content section
+        if (data.contentSection) {
+          setContentSection(data.contentSection);
+          setSavedContentSection(data.contentSection);
+        }
       }
     } catch (error) {
       console.error('Error loading data from Firebase:', error);
@@ -87,6 +100,7 @@ const HeroSection = () => {
       const dataToSave = {
         isEnabled,
         heroData,
+        contentSection,
         updatedAt: new Date().toISOString()
       };
       
@@ -95,6 +109,7 @@ const HeroSection = () => {
       // Update saved states
       setSavedIsEnabled(isEnabled);
       setSavedHeroData({ ...heroData });
+      setSavedContentSection({ ...contentSection });
       
       setSaveStatus({ section, status: 'success' });
       setTimeout(() => setSaveStatus({ section: null, status: null }), 3000);
@@ -126,7 +141,8 @@ const HeroSection = () => {
 
   const hasUnsavedChanges = () => {
     return isEnabled !== savedIsEnabled || 
-           JSON.stringify(heroData) !== JSON.stringify(savedHeroData);
+           JSON.stringify(heroData) !== JSON.stringify(savedHeroData) ||
+           JSON.stringify(contentSection) !== JSON.stringify(savedContentSection);
   };
 
   return (
@@ -247,6 +263,65 @@ const HeroSection = () => {
                 <span className="save-status success">Saved successfully!</span>
               )}
               {saveStatus.section === 'hero' && saveStatus.status === 'error' && (
+                <span className="save-status error">Error saving data</span>
+              )}
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* Content Section */}
+      <div className="config-section">
+        <button
+          className="section-header"
+          onClick={() => toggleSection('content')}
+        >
+          <div className="section-header-title">Content Section</div>
+          {expandedSection === 'content' ? <ChevronUp size={20} /> : <ChevronDown size={20} />}
+        </button>
+
+        {expandedSection === 'content' && (
+          <div className="section-content">
+            <div className="form-grid">
+              <div className="form-group full-width">
+                <label className="form-label">Enable Content Section</label>
+                <label className="toggle-label">
+                  <input
+                    type="checkbox"
+                    className="toggle-checkbox"
+                    checked={contentSection.enabled}
+                    onChange={(e) => setContentSection(prev => ({ ...prev, enabled: e.target.checked }))}
+                  />
+                  <span className="toggle-text">{contentSection.enabled ? 'Enabled' : 'Disabled'}</span>
+                </label>
+              </div>
+
+              <div className="form-group full-width">
+                <label className="form-label">Content</label>
+                <textarea
+                  className="form-textarea"
+                  rows={6}
+                  value={contentSection.content}
+                  onChange={(e) => setContentSection(prev => ({ ...prev, content: e.target.value }))}
+                  placeholder="Enter content text..."
+                />
+              </div>
+            </div>
+
+            <div className="section-actions">
+              <button
+                className="btn-primary"
+                onClick={() => saveToFirebase('content')}
+                disabled={loading || !hasUnsavedChanges()}
+              >
+                {saveStatus.section === 'content' && saveStatus.status === 'saving'
+                  ? 'Saving...'
+                  : 'Save Content Section'}
+              </button>
+              {saveStatus.section === 'content' && saveStatus.status === 'success' && (
+                <span className="save-status success">Saved successfully!</span>
+              )}
+              {saveStatus.section === 'content' && saveStatus.status === 'error' && (
                 <span className="save-status error">Error saving data</span>
               )}
             </div>

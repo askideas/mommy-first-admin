@@ -49,7 +49,8 @@ const EspotConfiguration = () => {
     const newEspot = {
       id: Date.now(),
       index: '',
-      image: null
+      image: null,
+      link: ''
     };
     setEspots([...espots, newEspot]);
   };
@@ -196,6 +197,17 @@ const EspotConfiguration = () => {
                           </button>
                         )}
                       </div>
+                    </div>
+
+                    <div className="form-group">
+                      <label className="form-label">Redirection Link</label>
+                      <input
+                        type="url"
+                        className="form-input"
+                        placeholder="Enter redirection URL (e.g., https://example.com or /page)"
+                        value={espot.link || ''}
+                        onChange={(e) => handleEspotChange(espot.id, 'link', e.target.value)}
+                      />
                     </div>
                   </div>
                 </div>
