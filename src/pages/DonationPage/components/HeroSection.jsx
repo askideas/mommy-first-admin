@@ -105,8 +105,8 @@ const HeroSection = () => {
            JSON.stringify(heroData) !== JSON.stringify(savedHeroData);
   };
 
-  const handleImageSelected = (imageData) => {
-    setHeroData(prev => ({ ...prev, mainImage: imageData.url }));
+  const handleImageSelected = (imageUrl) => {
+    setHeroData(prev => ({ ...prev, mainImage: imageUrl }));
     setIsImageKitOpen(false);
   };
 
@@ -234,7 +234,7 @@ const HeroSection = () => {
       <ImageKitBrowser
         isOpen={isImageKitOpen}
         onClose={() => setIsImageKitOpen(false)}
-        onSelectImage={handleImageSelected}
+        onSelect={handleImageSelected}
       />
     </div>
   );

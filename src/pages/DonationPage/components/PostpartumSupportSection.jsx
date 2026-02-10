@@ -105,8 +105,8 @@ const PostpartumSupportSection = () => {
            JSON.stringify(supportData) !== JSON.stringify(savedSupportData);
   };
 
-  const handleImageSelected = (imageData) => {
-    setSupportData(prev => ({ ...prev, logo: imageData.url }));
+  const handleImageSelected = (imageUrl) => {
+    setSupportData(prev => ({ ...prev, logo: imageUrl }));
     setIsImageKitOpen(false);
   };
 
@@ -292,7 +292,7 @@ const PostpartumSupportSection = () => {
       <ImageKitBrowser
         isOpen={isImageKitOpen}
         onClose={() => setIsImageKitOpen(false)}
-        onSelectImage={handleImageSelected}
+        onSelect={handleImageSelected}
       />
     </div>
   );

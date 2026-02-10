@@ -110,12 +110,12 @@ const MeaningfulImpactSection = () => {
     setIsImageKitOpen(true);
   };
 
-  const handleImageSelected = (imageData) => {
+  const handleImageSelected = (imageUrl) => {
     if (currentImageIndex !== null) {
       setImpactData(prev => ({
         ...prev,
         images: prev.images.map((img, idx) =>
-          idx === currentImageIndex ? { ...img, url: imageData.url } : img
+          idx === currentImageIndex ? { ...img, url: imageUrl } : img
         )
       }));
     }
@@ -285,7 +285,7 @@ const MeaningfulImpactSection = () => {
           setIsImageKitOpen(false);
           setCurrentImageIndex(null);
         }}
-        onSelectImage={handleImageSelected}
+        onSelect={handleImageSelected}
       />
     </div>
   );

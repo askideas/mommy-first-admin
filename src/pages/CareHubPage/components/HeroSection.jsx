@@ -115,15 +115,15 @@ const HeroSection = () => {
     setIsImageKitOpen(true);
   };
 
-  const handleImageSelected = (imageData) => {
+  const handleImageSelected = (imageUrl) => {
     if (currentImageField === 'mainImage') {
-      setHeroData(prev => ({ ...prev, mainImage: imageData.url }));
+      setHeroData(prev => ({ ...prev, mainImage: imageUrl }));
     } else if (currentImageField?.startsWith('bubble-')) {
       const bubbleId = parseInt(currentImageField.split('-')[1]);
       setHeroData(prev => ({
         ...prev,
         infoBubbles: prev.infoBubbles.map(bubble =>
-          bubble.id === bubbleId ? { ...bubble, image: imageData.url } : bubble
+          bubble.id === bubbleId ? { ...bubble, image: imageUrl } : bubble
         )
       }));
     }
@@ -425,7 +425,7 @@ const HeroSection = () => {
           setIsImageKitOpen(false);
           setCurrentImageField(null);
         }}
-        onSelectImage={handleImageSelected}
+        onSelect={handleImageSelected}
       />
     </div>
   );
