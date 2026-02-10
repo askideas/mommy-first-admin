@@ -4,7 +4,6 @@ import HeroSection from './components/HeroSection';
 import FAQSection from './components/FAQSection';
 import RecoveryConciergeSection from './components/RecoveryConciergeSection';
 import ContactMethodsSection from './components/ContactMethodsSection';
-import BusinessPartnersSection from './components/BusinessPartnersSection';
 import ReturnsSection from './components/ReturnsSection';
 
 const ContactPage = () => {
@@ -15,7 +14,6 @@ const ContactPage = () => {
     { id: 'faq', name: 'FAQ Section' },
     { id: 'recovery', name: 'Recovery Concierge' },
     { id: 'contact-methods', name: 'Contact Methods' },
-    { id: 'business', name: 'Business & Partners' },
     { id: 'returns', name: 'Returns & Exchanges' }
   ];
 
@@ -31,8 +29,6 @@ const ContactPage = () => {
         return <RecoveryConciergeSection />;
       case 'contact-methods':
         return <ContactMethodsSection />;
-      case 'business':
-        return <BusinessPartnersSection />;
       case 'returns':
         return <ReturnsSection />;
       default:

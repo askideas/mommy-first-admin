@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { ChevronDown, ChevronUp, Plus, Trash2 } from 'lucide-react';
+import { ChevronDown, ChevronUp } from 'lucide-react';
 import { doc, getDoc, setDoc } from 'firebase/firestore';
 import { db } from '../../../config/firebase';
 import './ContactSection.css';
@@ -12,39 +12,39 @@ const ContactMethodsSection = () => {
   const [isEnabled, setIsEnabled] = useState(true);
   const [savedIsEnabled, setSavedIsEnabled] = useState(true);
   
-  const [contactMethods, setContactMethods] = useState([
-    {
-      id: 1,
-      type: 'Email',
-      icon: '✉️',
-      responseTime: 'Response time: within 4 hours',
-      hours: '',
-      phoneNumber: '',
-      emails: ['care@themommyfirst.com', 'orders@themommyfirst.com', 'support@themommyfirst.com'],
-      note: 'For assistance outside these hours, please email customer support.'
-    },
-    {
-      id: 2,
-      type: 'Phone',
-      icon: '📞',
-      responseTime: '',
-      hours: 'Mon–Fri: 9 AM – 5:00 PM - EST',
-      phoneNumber: '(845) 300-9289',
-      emails: [],
-      note: 'For assistance outside these hours, please email customer support.'
-    },
-    {
-      id: 3,
-      type: 'WhatsApp',
-      icon: '💬',
-      responseTime: 'Response time: within 4 hours',
-      hours: '',
-      phoneNumber: '(845) 300-9289',
-      emails: [],
-      note: ''
-    }
-  ]);
-  const [savedContactMethods, setSavedContactMethods] = useState(null);
+  // Email Section State
+  const [emailSection, setEmailSection] = useState({
+    heading: 'Email Us',
+    description: 'Get in touch with us via email. We respond within 4 hours.',
+    note: 'For assistance outside business hours, please email customer support.',
+    emails: [
+      { label: 'Customer Care', email: 'care@themommyfirst.com' },
+      { label: 'Orders & Shipping', email: 'orders@themommyfirst.com' },
+      { label: 'Technical Support', email: 'support@themommyfirst.com' }
+    ]
+  });
+  const [savedEmailSection, setSavedEmailSection] = useState(null);
+
+  // Phone Section State
+  const [phoneSection, setPhoneSection] = useState({
+    heading: 'Call Us',
+    description: 'Mon–Fri: 9 AM – 5:00 PM EST',
+    phoneNumber: '(845) 300-9289',
+    whatsappHeading: 'WhatsApp',
+    whatsappDescription: 'Response time: within 4 hours',
+    whatsappNumber: '(845) 300-9289',
+    note: 'For assistance outside these hours, please email customer support.'
+  });
+  const [savedPhoneSection, setSavedPhoneSection] = useState(null);
+
+  // Business Partner Section State
+  const [businessSection, setBusinessSection] = useState({
+    heading: 'Business Partners',
+    subheading: 'Partner with the leader in premium postpartum solutions.',
+    buttonLabel: 'BUSINESS ENQUIRIES',
+    buttonLink: '/business'
+  });
+  const [savedBusinessSection, setSavedBusinessSection] = useState(null);
 
   useEffect(() => {
     if (db) {
@@ -71,9 +71,19 @@ const ContactMethodsSection = () => {
           setSavedIsEnabled(data.isEnabled);
         }
         
-        if (data.contactMethods) {
-          setContactMethods(data.contactMethods);
-          setSavedContactMethods(data.contactMethods);
+        if (data.emailSection) {
+          setEmailSection(data.emailSection);
+          setSavedEmailSection(data.emailSection);
+        }
+        
+        if (data.phoneSection) {
+          setPhoneSection(data.phoneSection);
+          setSavedPhoneSection(data.phoneSection);
+        }
+        
+        if (data.businessSection) {
+          setBusinessSection(data.businessSection);
+          setSavedBusinessSection(data.businessSection);
         }
       }
     } catch (error) {
@@ -99,14 +109,18 @@ const ContactMethodsSection = () => {
       
       const dataToSave = {
         isEnabled,
-        contactMethods,
+        emailSection,
+        phoneSection,
+        businessSection,
         updatedAt: new Date().toISOString()
       };
       
       await setDoc(docRef, dataToSave, { merge: true });
       
       setSavedIsEnabled(isEnabled);
-      setSavedContactMethods([...contactMethods]);
+      setSavedEmailSection({ ...emailSection });
+      setSavedPhoneSection({ ...phoneSection });
+      setSavedBusinessSection({ ...businessSection });
       
       setSaveStatus({ section: 'methods', status: 'success' });
       setTimeout(() => setSaveStatus({ section: null, status: null }), 3000);
@@ -123,51 +137,29 @@ const ContactMethodsSection = () => {
     setExpandedSection(expandedSection === section ? null : section);
   };
 
-  const addContactMethod = () => {
-    const newMethod = {
-      id: Date.now(),
-      type: 'New Method',
-      icon: '📱',
-      responseTime: '',
-      hours: '',
-      phoneNumber: '',
-      emails: [],
-      note: ''
-    };
-    setContactMethods([...contactMethods, newMethod]);
+  const updateEmailField = (field, value) => {
+    setEmailSection(prev => ({ ...prev, [field]: value }));
   };
 
-  const removeContactMethod = (index) => {
-    setContactMethods(contactMethods.filter((_, i) => i !== index));
+  const updateEmailItem = (index, field, value) => {
+    const updatedEmails = [...emailSection.emails];
+    updatedEmails[index] = { ...updatedEmails[index], [field]: value };
+    setEmailSection(prev => ({ ...prev, emails: updatedEmails }));
   };
 
-  const updateContactMethod = (index, field, value) => {
-    const updated = [...contactMethods];
-    updated[index][field] = value;
-    setContactMethods(updated);
+  const updatePhoneField = (field, value) => {
+    setPhoneSection(prev => ({ ...prev, [field]: value }));
   };
 
-  const addEmail = (index) => {
-    const updated = [...contactMethods];
-    updated[index].emails.push('');
-    setContactMethods(updated);
-  };
-
-  const updateEmail = (methodIndex, emailIndex, value) => {
-    const updated = [...contactMethods];
-    updated[methodIndex].emails[emailIndex] = value;
-    setContactMethods(updated);
-  };
-
-  const removeEmail = (methodIndex, emailIndex) => {
-    const updated = [...contactMethods];
-    updated[methodIndex].emails.splice(emailIndex, 1);
-    setContactMethods(updated);
+  const updateBusinessField = (field, value) => {
+    setBusinessSection(prev => ({ ...prev, [field]: value }));
   };
 
   const hasUnsavedChanges = () => {
     return isEnabled !== savedIsEnabled || 
-           JSON.stringify(contactMethods) !== JSON.stringify(savedContactMethods);
+           JSON.stringify(emailSection) !== JSON.stringify(savedEmailSection) ||
+           JSON.stringify(phoneSection) !== JSON.stringify(savedPhoneSection) ||
+           JSON.stringify(businessSection) !== JSON.stringify(savedBusinessSection);
   };
 
   return (
@@ -187,142 +179,267 @@ const ContactMethodsSection = () => {
         </div>
       </div>
 
-      {contactMethods.map((method, index) => (
-        <div key={method.id} className="config-section">
-          <button
-            className="section-header"
-            onClick={() => toggleSection(`method-${index}`)}
-          >
-            <div className="section-header-title">
-              {method.icon} {method.type}
-            </div>
-            <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-              {contactMethods.length > 1 && (
-                <button
-                  className="icon-btn-danger"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    removeContactMethod(index);
-                  }}
-                  title="Remove Contact Method"
-                >
-                  <Trash2 size={16} />
-                </button>
-              )}
-              {expandedSection === `method-${index}` ? <ChevronUp size={20} /> : <ChevronDown size={20} />}
-            </div>
-          </button>
+      {/* Email Section */}
+      <div className="config-section">
+        <button
+          className="section-header"
+          onClick={() => toggleSection('email')}
+        >
+          <div className="section-header-title">
+            ✉️ Email Section
+          </div>
+          {expandedSection === 'email' ? <ChevronUp size={20} /> : <ChevronDown size={20} />}
+        </button>
 
-          {expandedSection === `method-${index}` && (
-            <div className="section-content">
-              <div className="form-grid">
-                <div className="form-group">
-                  <label className="form-label">Type</label>
-                  <input
-                    type="text"
-                    className="form-input"
-                    value={method.type}
-                    onChange={(e) => updateContactMethod(index, 'type', e.target.value)}
-                    placeholder="e.g., Email, Phone, WhatsApp"
-                  />
-                </div>
+        {expandedSection === 'email' && (
+          <div className="section-content">
+            <div className="form-grid">
+              <div className="form-group full-width">
+                <label className="form-label">Heading</label>
+                <input
+                  type="text"
+                  className="form-input"
+                  value={emailSection.heading}
+                  onChange={(e) => updateEmailField('heading', e.target.value)}
+                  placeholder="Enter email section heading"
+                />
+              </div>
 
-                <div className="form-group">
-                  <label className="form-label">Icon (Emoji)</label>
-                  <input
-                    type="text"
-                    className="form-input"
-                    value={method.icon}
-                    onChange={(e) => updateContactMethod(index, 'icon', e.target.value)}
-                    placeholder="e.g., ✉️"
-                    maxLength={2}
-                  />
-                </div>
+              <div className="form-group full-width">
+                <label className="form-label">Description</label>
+                <textarea
+                  className="form-textarea"
+                  rows={2}
+                  value={emailSection.description}
+                  onChange={(e) => updateEmailField('description', e.target.value)}
+                  placeholder="Enter email section description"
+                />
+              </div>
 
-                <div className="form-group full-width">
-                  <label className="form-label">Response Time</label>
-                  <input
-                    type="text"
-                    className="form-input"
-                    value={method.responseTime}
-                    onChange={(e) => updateContactMethod(index, 'responseTime', e.target.value)}
-                    placeholder="e.g., Response time: within 4 hours"
-                  />
-                </div>
+              <div className="form-group full-width">
+                <label className="form-label">Note</label>
+                <textarea
+                  className="form-textarea"
+                  rows={2}
+                  value={emailSection.note}
+                  onChange={(e) => updateEmailField('note', e.target.value)}
+                  placeholder="Enter note for email section"
+                />
+              </div>
 
-                <div className="form-group full-width">
-                  <label className="form-label">Hours</label>
-                  <input
-                    type="text"
-                    className="form-input"
-                    value={method.hours}
-                    onChange={(e) => updateContactMethod(index, 'hours', e.target.value)}
-                    placeholder="e.g., Mon–Fri: 9 AM – 5:00 PM - EST"
-                  />
-                </div>
-
-                <div className="form-group full-width">
-                  <label className="form-label">Phone Number</label>
-                  <input
-                    type="text"
-                    className="form-input"
-                    value={method.phoneNumber}
-                    onChange={(e) => updateContactMethod(index, 'phoneNumber', e.target.value)}
-                    placeholder="e.g., (845) 300-9289"
-                  />
-                </div>
-
-                <div className="form-group full-width">
-                  <label className="form-label">Email Addresses</label>
-                  {method.emails.map((email, emailIndex) => (
-                    <div key={emailIndex} style={{ display: 'flex', gap: '8px', marginBottom: '8px' }}>
+              <div className="form-group full-width">
+                <label className="form-label" style={{ marginBottom: '12px', display: 'block' }}>Email Addresses (3 Fixed)</label>
+                
+                {emailSection.emails.map((emailItem, index) => (
+                  <div key={index} className="email-item-row" style={{ 
+                    display: 'grid', 
+                    gridTemplateColumns: '1fr 2fr', 
+                    gap: '12px', 
+                    marginBottom: '12px',
+                    padding: '12px',
+                    background: '#f8f9fa',
+                    borderRadius: '8px'
+                  }}>
+                    <div>
+                      <label className="form-label" style={{ fontSize: '12px', marginBottom: '4px' }}>Label {index + 1}</label>
+                      <input
+                        type="text"
+                        className="form-input"
+                        value={emailItem.label}
+                        onChange={(e) => updateEmailItem(index, 'label', e.target.value)}
+                        placeholder="e.g., Customer Care"
+                      />
+                    </div>
+                    <div>
+                      <label className="form-label" style={{ fontSize: '12px', marginBottom: '4px' }}>Email Address {index + 1}</label>
                       <input
                         type="email"
                         className="form-input"
-                        value={email}
-                        onChange={(e) => updateEmail(index, emailIndex, e.target.value)}
+                        value={emailItem.email}
+                        onChange={(e) => updateEmailItem(index, 'email', e.target.value)}
                         placeholder="email@example.com"
                       />
-                      <button
-                        type="button"
-                        className="icon-btn-danger"
-                        onClick={() => removeEmail(index, emailIndex)}
-                      >
-                        <Trash2 size={16} />
-                      </button>
                     </div>
-                  ))}
-                  <button
-                    type="button"
-                    className="btn-secondary"
-                    onClick={() => addEmail(index)}
-                    style={{ marginTop: '8px' }}
-                  >
-                    <Plus size={16} />
-                    Add Email
-                  </button>
-                </div>
-
-                <div className="form-group full-width">
-                  <label className="form-label">Note</label>
-                  <textarea
-                    className="form-textarea"
-                    rows={2}
-                    value={method.note}
-                    onChange={(e) => updateContactMethod(index, 'note', e.target.value)}
-                    placeholder="Additional note..."
-                  />
-                </div>
+                  </div>
+                ))}
               </div>
             </div>
-          )}
-        </div>
-      ))}
+          </div>
+        )}
+      </div>
 
-      <button className="btn-add-item" onClick={addContactMethod}>
-        <Plus size={18} />
-        Add Contact Method
-      </button>
+      {/* Phone Section */}
+      <div className="config-section">
+        <button
+          className="section-header"
+          onClick={() => toggleSection('phone')}
+        >
+          <div className="section-header-title">
+            📞 Phone Section
+          </div>
+          {expandedSection === 'phone' ? <ChevronUp size={20} /> : <ChevronDown size={20} />}
+        </button>
+
+        {expandedSection === 'phone' && (
+          <div className="section-content">
+            <div className="form-grid">
+              <div className="form-group full-width">
+                <label className="form-label">Heading</label>
+                <input
+                  type="text"
+                  className="form-input"
+                  value={phoneSection.heading}
+                  onChange={(e) => updatePhoneField('heading', e.target.value)}
+                  placeholder="Enter phone section heading"
+                />
+              </div>
+
+              <div className="form-group full-width">
+                <label className="form-label">Description</label>
+                <textarea
+                  className="form-textarea"
+                  rows={2}
+                  value={phoneSection.description}
+                  onChange={(e) => updatePhoneField('description', e.target.value)}
+                  placeholder="Enter phone section description (e.g., business hours)"
+                />
+              </div>
+
+              <div className="form-group full-width">
+                <label className="form-label">Phone Number</label>
+                <input
+                  type="text"
+                  className="form-input"
+                  value={phoneSection.phoneNumber}
+                  onChange={(e) => updatePhoneField('phoneNumber', e.target.value)}
+                  placeholder="e.g., (845) 300-9289"
+                />
+              </div>
+
+              <div className="form-group full-width" style={{ 
+                marginTop: '16px', 
+                paddingTop: '16px', 
+                borderTop: '1px solid #e0e0e0' 
+              }}>
+                <label className="form-label" style={{ fontWeight: '700', color: '#25D366' }}>
+                  💬 WhatsApp Details
+                </label>
+              </div>
+
+              <div className="form-group full-width">
+                <label className="form-label">WhatsApp Heading</label>
+                <input
+                  type="text"
+                  className="form-input"
+                  value={phoneSection.whatsappHeading}
+                  onChange={(e) => updatePhoneField('whatsappHeading', e.target.value)}
+                  placeholder="Enter WhatsApp heading"
+                />
+              </div>
+
+              <div className="form-group full-width">
+                <label className="form-label">WhatsApp Description</label>
+                <textarea
+                  className="form-textarea"
+                  rows={2}
+                  value={phoneSection.whatsappDescription}
+                  onChange={(e) => updatePhoneField('whatsappDescription', e.target.value)}
+                  placeholder="Enter WhatsApp description"
+                />
+              </div>
+
+              <div className="form-group full-width">
+                <label className="form-label">WhatsApp Number</label>
+                <input
+                  type="text"
+                  className="form-input"
+                  value={phoneSection.whatsappNumber}
+                  onChange={(e) => updatePhoneField('whatsappNumber', e.target.value)}
+                  placeholder="e.g., (845) 300-9289"
+                />
+              </div>
+
+              <div className="form-group full-width" style={{ 
+                marginTop: '16px', 
+                paddingTop: '16px', 
+                borderTop: '1px solid #e0e0e0' 
+              }}>
+                <label className="form-label">Note</label>
+                <textarea
+                  className="form-textarea"
+                  rows={2}
+                  value={phoneSection.note}
+                  onChange={(e) => updatePhoneField('note', e.target.value)}
+                  placeholder="Enter note for phone section"
+                />
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* Business Partner Section */}
+      <div className="config-section">
+        <button
+          className="section-header"
+          onClick={() => toggleSection('business')}
+        >
+          <div className="section-header-title">
+            🤝 Business Partner Section
+          </div>
+          {expandedSection === 'business' ? <ChevronUp size={20} /> : <ChevronDown size={20} />}
+        </button>
+
+        {expandedSection === 'business' && (
+          <div className="section-content">
+            <div className="form-grid">
+              <div className="form-group full-width">
+                <label className="form-label">Heading</label>
+                <input
+                  type="text"
+                  className="form-input"
+                  value={businessSection.heading}
+                  onChange={(e) => updateBusinessField('heading', e.target.value)}
+                  placeholder="Enter business section heading"
+                />
+              </div>
+
+              <div className="form-group full-width">
+                <label className="form-label">Subheading</label>
+                <textarea
+                  className="form-textarea"
+                  rows={2}
+                  value={businessSection.subheading}
+                  onChange={(e) => updateBusinessField('subheading', e.target.value)}
+                  placeholder="Enter business section subheading"
+                />
+              </div>
+
+              <div className="form-group">
+                <label className="form-label">Button Label</label>
+                <input
+                  type="text"
+                  className="form-input"
+                  value={businessSection.buttonLabel}
+                  onChange={(e) => updateBusinessField('buttonLabel', e.target.value)}
+                  placeholder="e.g., BUSINESS ENQUIRIES"
+                />
+              </div>
+
+              <div className="form-group">
+                <label className="form-label">Button Link</label>
+                <input
+                  type="text"
+                  className="form-input"
+                  value={businessSection.buttonLink}
+                  onChange={(e) => updateBusinessField('buttonLink', e.target.value)}
+                  placeholder="e.g., /business or https://..."
+                />
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
 
       <div className="save-section">
         <button

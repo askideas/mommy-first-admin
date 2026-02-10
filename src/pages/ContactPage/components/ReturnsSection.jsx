@@ -152,28 +152,6 @@ const ReturnsSection = () => {
                   placeholder="Enter description..."
                 />
               </div>
-
-              <div className="form-group">
-                <label className="form-label">Button Text</label>
-                <input
-                  type="text"
-                  className="form-input"
-                  value={returnsData.buttonText}
-                  onChange={(e) => setReturnsData(prev => ({ ...prev, buttonText: e.target.value }))}
-                  placeholder="e.g., LOGIN TO YOUR ACCOUNT"
-                />
-              </div>
-
-              <div className="form-group">
-                <label className="form-label">Button Link</label>
-                <input
-                  type="text"
-                  className="form-input"
-                  value={returnsData.buttonLink}
-                  onChange={(e) => setReturnsData(prev => ({ ...prev, buttonLink: e.target.value }))}
-                  placeholder="e.g., /login"
-                />
-              </div>
             </div>
 
             <div className="section-actions">
