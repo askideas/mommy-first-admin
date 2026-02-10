@@ -2,18 +2,24 @@ import { useState, useEffect } from 'react';
 import { ChevronDown, ChevronUp, Plus, Trash2 } from 'lucide-react';
 import { doc, getDoc, setDoc } from 'firebase/firestore';
 import { db } from '../../../config/firebase';
+import ImageKitBrowser from '../../../components/ImageKitBrowser';
 import './AffiliateSection.css';
 
 const ProgramFeaturesSection = () => {
   const [expandedSection, setExpandedSection] = useState(null);
   const [loading, setLoading] = useState(false);
   const [saveStatus, setSaveStatus] = useState({ section: null, status: null });
+  const [activeImagePicker, setActiveImagePicker] = useState(null);
   
   const [isEnabled, setIsEnabled] = useState(true);
   const [savedIsEnabled, setSavedIsEnabled] = useState(true);
   
   const [featuresData, setFeaturesData] = useState({
-    features: []
+    cards: [
+      { id: 1, heading: '', label: '', iconImage: '', points: [] },
+      { id: 2, heading: '', label: '', iconImage: '', points: [] },
+      { id: 3, heading: '', label: '', iconImage: '', points: [] }
+    ]
   });
   const [savedFeaturesData, setSavedFeaturesData] = useState(null);
 
@@ -99,71 +105,49 @@ const ProgramFeaturesSection = () => {
            JSON.stringify(featuresData) !== JSON.stringify(savedFeaturesData);
   };
 
-  const addFeature = () => {
-    const newFeature = {
-      id: Date.now(),
-      icon: '🎯',
-      iconBackgroundColor: '#FFE8F0',
-      title: '',
-      description: '',
-      points: []
-    };
+  const updateCard = (cardId, field, value) => {
     setFeaturesData(prev => ({
       ...prev,
-      features: [...prev.features, newFeature]
-    }));
-  };
-
-  const removeFeature = (featureId) => {
-    setFeaturesData(prev => ({
-      ...prev,
-      features: prev.features.filter(feature => feature.id !== featureId)
-    }));
-  };
-
-  const updateFeature = (featureId, field, value) => {
-    setFeaturesData(prev => ({
-      ...prev,
-      features: prev.features.map(feature =>
-        feature.id === featureId ? { ...feature, [field]: value } : feature
+      cards: prev.cards.map(card =>
+        card.id === cardId ? { ...card, [field]: value } : card
       )
     }));
   };
 
-  const addPoint = (featureId) => {
+  const addPoint = (cardId) => {
     setFeaturesData(prev => ({
       ...prev,
-      features: prev.features.map(feature =>
-        feature.id === featureId 
-          ? { ...feature, points: [...feature.points, { id: Date.now(), text: '' }] }
-          : feature
+      cards: prev.cards.map(card =>
+        card.id === cardId 
+          ? { ...card, points: [...card.points, { id: Date.now(), text: '' }] }
+          : card
       )
     }));
   };
 
-  const removePoint = (featureId, pointId) => {
+  const removePoint = (cardId, pointId) => {
     setFeaturesData(prev => ({
       ...prev,
-      features: prev.features.map(feature =>
-        feature.id === featureId 
-          ? { ...feature, points: feature.points.filter(p => p.id !== pointId) }
-          : feature
+      cards: prev.cards.map(card =>
+        card.id === cardId 
+          ? { ...card, points: card.points.filter(p => p.id !== pointId) }
+          : card
       )
     }));
   };
 
-  const updatePoint = (featureId, pointId, value) => {
+  const updatePoint = (cardId, pointId, value) => {
     setFeaturesData(prev => ({
       ...prev,
-      features: prev.features.map(feature =>
-        feature.id === featureId 
+      cards: prev.cards.map(card =>
+        card.id === cardId 
           ? { 
-              ...feature, 
-              points: feature.points.map(p => 
+              ...card, 
+              points: card.points.map(p => 
                 p.id === pointId ? { ...p, text: value } : p
               ) 
             }
-          : feature
+          : card
       )
     }));
   };
@@ -190,96 +174,83 @@ const ProgramFeaturesSection = () => {
           className="section-header"
           onClick={() => toggleSection('features')}
         >
-          <div className="section-header-title">Feature Cards ({featuresData.features.length})</div>
+          <div className="section-header-title">Feature Cards (3)</div>
           {expandedSection === 'features' ? <ChevronUp size={20} /> : <ChevronDown size={20} />}
         </button>
 
         {expandedSection === 'features' && (
           <div className="section-content">
             <div className="cards-list">
-              {featuresData.features.map((feature, index) => (
-                <div key={feature.id} className="card-item">
+              {featuresData.cards.map((card, index) => (
+                <div key={card.id} className="card-item">
                   <div className="card-item-header">
-                    <span className="card-item-title">Feature {index + 1}</span>
-                    <button
-                      type="button"
-                      className="btn-danger"
-                      onClick={() => removeFeature(feature.id)}
-                    >
-                      <Trash2 size={16} />
-                      Remove
-                    </button>
+                    <span className="card-item-title">Card {index + 1}</span>
                   </div>
                   
                   <div className="form-grid">
-                    <div className="form-group">
-                      <label className="form-label">Icon (Emoji)</label>
-                      <input
-                        type="text"
-                        className="form-input"
-                        value={feature.icon}
-                        onChange={(e) => updateFeature(feature.id, 'icon', e.target.value)}
-                        placeholder="e.g., 🎯"
-                        maxLength={2}
-                      />
-                    </div>
-
-                    <div className="form-group">
-                      <label className="form-label">Icon Background Color</label>
-                      <div className="color-input-group">
-                        <input
-                          type="color"
-                          className="color-picker"
-                          value={feature.iconBackgroundColor}
-                          onChange={(e) => updateFeature(feature.id, 'iconBackgroundColor', e.target.value)}
-                        />
-                        <input
-                          type="text"
-                          className="form-input"
-                          value={feature.iconBackgroundColor}
-                          onChange={(e) => updateFeature(feature.id, 'iconBackgroundColor', e.target.value)}
-                        />
+                    <div className="form-group full-width">
+                      <label className="form-label">Icon Image</label>
+                      <div className="image-upload-group">
+                        {card.iconImage && (
+                          <img src={card.iconImage} alt={`Card ${index + 1} Icon`} className="preview-image" />
+                        )}
+                        <button
+                          type="button"
+                          className="btn-secondary"
+                          onClick={() => setActiveImagePicker(card.id)}
+                        >
+                          {card.iconImage ? 'Change Image' : 'Select Image'}
+                        </button>
+                        {card.iconImage && (
+                          <button
+                            type="button"
+                            className="btn-danger"
+                            onClick={() => updateCard(card.id, 'iconImage', '')}
+                          >
+                            Remove
+                          </button>
+                        )}
                       </div>
                     </div>
 
                     <div className="form-group full-width">
-                      <label className="form-label">Feature Title</label>
+                      <label className="form-label">Card Heading</label>
                       <input
                         type="text"
                         className="form-input"
-                        value={feature.title}
-                        onChange={(e) => updateFeature(feature.id, 'title', e.target.value)}
-                        placeholder="Enter feature title..."
+                        value={card.heading}
+                        onChange={(e) => updateCard(card.id, 'heading', e.target.value)}
+                        placeholder="Enter card heading..."
                       />
                     </div>
 
                     <div className="form-group full-width">
-                      <label className="form-label">Description</label>
-                      <textarea
-                        className="form-textarea"
-                        rows={2}
-                        value={feature.description}
-                        onChange={(e) => updateFeature(feature.id, 'description', e.target.value)}
-                        placeholder="Enter description..."
+                      <label className="form-label">Card Label</label>
+                      <input
+                        type="text"
+                        className="form-input"
+                        value={card.label}
+                        onChange={(e) => updateCard(card.id, 'label', e.target.value)}
+                        placeholder="Enter card label..."
                       />
                     </div>
 
                     <div className="form-group full-width">
                       <label className="form-label">Feature Points</label>
-                      {feature.points.map((point, pIndex) => (
+                      {card.points.map((point, pIndex) => (
                         <div key={point.id} style={{ display: 'flex', gap: '8px', marginBottom: '8px' }}>
                           <input
                             type="text"
                             className="form-input"
                             value={point.text}
-                            onChange={(e) => updatePoint(feature.id, point.id, e.target.value)}
+                            onChange={(e) => updatePoint(card.id, point.id, e.target.value)}
                             placeholder={`Point ${pIndex + 1}`}
                             style={{ flex: 1 }}
                           />
                           <button
                             type="button"
                             className="btn-danger"
-                            onClick={() => removePoint(feature.id, point.id)}
+                            onClick={() => removePoint(card.id, point.id)}
                           >
                             <Trash2 size={14} />
                           </button>
@@ -288,7 +259,7 @@ const ProgramFeaturesSection = () => {
                       <button
                         type="button"
                         className="btn-secondary"
-                        onClick={() => addPoint(feature.id)}
+                        onClick={() => addPoint(card.id)}
                         style={{ marginTop: '8px' }}
                       >
                         <Plus size={16} />
@@ -300,14 +271,14 @@ const ProgramFeaturesSection = () => {
               ))}
             </div>
 
-            <button
-              type="button"
-              className="btn-secondary add-item-btn"
-              onClick={addFeature}
-            >
-              <Plus size={16} />
-              Add Feature Card
-            </button>
+            <ImageKitBrowser
+              isOpen={activeImagePicker !== null}
+              onSelect={(url) => {
+                updateCard(activeImagePicker, 'iconImage', url);
+                setActiveImagePicker(null);
+              }}
+              onClose={() => setActiveImagePicker(null)}
+            />
           </div>
         )}
       </div>

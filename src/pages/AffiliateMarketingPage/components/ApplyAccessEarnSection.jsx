@@ -13,13 +13,9 @@ const ApplyAccessEarnSection = () => {
   const [savedIsEnabled, setSavedIsEnabled] = useState(true);
   
   const [sectionData, setSectionData] = useState({
-    applyText: 'APPLY',
-    accessText: 'ACCESS',
-    earnText: 'EARN',
-    applyColor: '#DC5F92',
-    accessColor: '#9C27B0',
-    earnColor: '#F9A825',
-    backgroundColor: '#FFFFFF'
+    label1: 'APPLY',
+    label2: 'ACCESS',
+    label3: 'EARN'
   });
   const [savedSectionData, setSavedSectionData] = useState(null);
 
@@ -134,109 +130,37 @@ const ApplyAccessEarnSection = () => {
         {expandedSection === 'content' && (
           <div className="section-content">
             <div className="form-grid">
-              <div className="form-group">
-                <label className="form-label">Apply Text</label>
+              <div className="form-group full-width">
+                <label className="form-label">Label 1</label>
                 <input
                   type="text"
                   className="form-input"
-                  value={sectionData.applyText}
-                  onChange={(e) => setSectionData(prev => ({ ...prev, applyText: e.target.value }))}
+                  value={sectionData.label1}
+                  onChange={(e) => setSectionData(prev => ({ ...prev, label1: e.target.value }))}
                   placeholder="e.g., APPLY"
                 />
               </div>
 
-              <div className="form-group">
-                <label className="form-label">Apply Color</label>
-                <div className="color-input-group">
-                  <input
-                    type="color"
-                    className="color-picker"
-                    value={sectionData.applyColor}
-                    onChange={(e) => setSectionData(prev => ({ ...prev, applyColor: e.target.value }))}
-                  />
-                  <input
-                    type="text"
-                    className="form-input"
-                    value={sectionData.applyColor}
-                    onChange={(e) => setSectionData(prev => ({ ...prev, applyColor: e.target.value }))}
-                  />
-                </div>
-              </div>
-
-              <div className="form-group">
-                <label className="form-label">Access Text</label>
+              <div className="form-group full-width">
+                <label className="form-label">Label 2</label>
                 <input
                   type="text"
                   className="form-input"
-                  value={sectionData.accessText}
-                  onChange={(e) => setSectionData(prev => ({ ...prev, accessText: e.target.value }))}
+                  value={sectionData.label2}
+                  onChange={(e) => setSectionData(prev => ({ ...prev, label2: e.target.value }))}
                   placeholder="e.g., ACCESS"
                 />
               </div>
 
-              <div className="form-group">
-                <label className="form-label">Access Color</label>
-                <div className="color-input-group">
-                  <input
-                    type="color"
-                    className="color-picker"
-                    value={sectionData.accessColor}
-                    onChange={(e) => setSectionData(prev => ({ ...prev, accessColor: e.target.value }))}
-                  />
-                  <input
-                    type="text"
-                    className="form-input"
-                    value={sectionData.accessColor}
-                    onChange={(e) => setSectionData(prev => ({ ...prev, accessColor: e.target.value }))}
-                  />
-                </div>
-              </div>
-
-              <div className="form-group">
-                <label className="form-label">Earn Text</label>
+              <div className="form-group full-width">
+                <label className="form-label">Label 3</label>
                 <input
                   type="text"
                   className="form-input"
-                  value={sectionData.earnText}
-                  onChange={(e) => setSectionData(prev => ({ ...prev, earnText: e.target.value }))}
+                  value={sectionData.label3}
+                  onChange={(e) => setSectionData(prev => ({ ...prev, label3: e.target.value }))}
                   placeholder="e.g., EARN"
                 />
-              </div>
-
-              <div className="form-group">
-                <label className="form-label">Earn Color</label>
-                <div className="color-input-group">
-                  <input
-                    type="color"
-                    className="color-picker"
-                    value={sectionData.earnColor}
-                    onChange={(e) => setSectionData(prev => ({ ...prev, earnColor: e.target.value }))}
-                  />
-                  <input
-                    type="text"
-                    className="form-input"
-                    value={sectionData.earnColor}
-                    onChange={(e) => setSectionData(prev => ({ ...prev, earnColor: e.target.value }))}
-                  />
-                </div>
-              </div>
-
-              <div className="form-group">
-                <label className="form-label">Background Color</label>
-                <div className="color-input-group">
-                  <input
-                    type="color"
-                    className="color-picker"
-                    value={sectionData.backgroundColor}
-                    onChange={(e) => setSectionData(prev => ({ ...prev, backgroundColor: e.target.value }))}
-                  />
-                  <input
-                    type="text"
-                    className="form-input"
-                    value={sectionData.backgroundColor}
-                    onChange={(e) => setSectionData(prev => ({ ...prev, backgroundColor: e.target.value }))}
-                  />
-                </div>
               </div>
             </div>
 

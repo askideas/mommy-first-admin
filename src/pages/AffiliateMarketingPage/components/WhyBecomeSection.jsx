@@ -1,20 +1,28 @@
 import { useState, useEffect } from 'react';
-import { ChevronDown, ChevronUp, Plus, Trash2 } from 'lucide-react';
+import { ChevronDown, ChevronUp } from 'lucide-react';
 import { doc, getDoc, setDoc } from 'firebase/firestore';
 import { db } from '../../../config/firebase';
+import ImageKitBrowser from '../../../components/ImageKitBrowser';
 import './AffiliateSection.css';
 
 const WhyBecomeSection = () => {
   const [expandedSection, setExpandedSection] = useState(null);
   const [loading, setLoading] = useState(false);
   const [saveStatus, setSaveStatus] = useState({ section: null, status: null });
+  const [activeImagePicker, setActiveImagePicker] = useState(null);
   
   const [isEnabled, setIsEnabled] = useState(true);
   const [savedIsEnabled, setSavedIsEnabled] = useState(true);
   
   const [sectionData, setSectionData] = useState({
     heading: 'Why Become an Influencing Figure?',
-    cards: []
+    buttonLabel: '',
+    buttonText: '',
+    cards: [
+      { id: 1, image: '', heading: '', description: '' },
+      { id: 2, image: '', heading: '', description: '' },
+      { id: 3, image: '', heading: '', description: '' }
+    ]
   });
   const [savedSectionData, setSavedSectionData] = useState(null);
 
@@ -100,27 +108,6 @@ const WhyBecomeSection = () => {
            JSON.stringify(sectionData) !== JSON.stringify(savedSectionData);
   };
 
-  const addCard = () => {
-    const newCard = {
-      id: Date.now(),
-      icon: '📱',
-      iconColor: '#DC5F92',
-      title: '',
-      description: ''
-    };
-    setSectionData(prev => ({
-      ...prev,
-      cards: [...prev.cards, newCard]
-    }));
-  };
-
-  const removeCard = (cardId) => {
-    setSectionData(prev => ({
-      ...prev,
-      cards: prev.cards.filter(card => card.id !== cardId)
-    }));
-  };
-
   const updateCard = (cardId, field, value) => {
     setSectionData(prev => ({
       ...prev,
@@ -152,7 +139,7 @@ const WhyBecomeSection = () => {
           className="section-header"
           onClick={() => toggleSection('content')}
         >
-          <div className="section-header-title">Section Heading</div>
+          <div className="section-header-title">Section Content</div>
           {expandedSection === 'content' ? <ChevronUp size={20} /> : <ChevronDown size={20} />}
         </button>
 
@@ -169,6 +156,28 @@ const WhyBecomeSection = () => {
                   placeholder="e.g., Why Become an Influencing Figure?"
                 />
               </div>
+
+              <div className="form-group">
+                <label className="form-label">Button Label</label>
+                <input
+                  type="text"
+                  className="form-input"
+                  value={sectionData.buttonLabel}
+                  onChange={(e) => setSectionData(prev => ({ ...prev, buttonLabel: e.target.value }))}
+                  placeholder="e.g., Learn More"
+                />
+              </div>
+
+              <div className="form-group">
+                <label className="form-label">Button Text</label>
+                <input
+                  type="text"
+                  className="form-input"
+                  value={sectionData.buttonText}
+                  onChange={(e) => setSectionData(prev => ({ ...prev, buttonText: e.target.value }))}
+                  placeholder="e.g., Get Started"
+                />
+              </div>
             </div>
           </div>
         )}
@@ -179,7 +188,7 @@ const WhyBecomeSection = () => {
           className="section-header"
           onClick={() => toggleSection('cards')}
         >
-          <div className="section-header-title">Feature Cards ({sectionData.cards.length})</div>
+          <div className="section-header-title">Feature Cards (3)</div>
           {expandedSection === 'cards' ? <ChevronUp size={20} /> : <ChevronDown size={20} />}
         </button>
 
@@ -190,55 +199,42 @@ const WhyBecomeSection = () => {
                 <div key={card.id} className="card-item">
                   <div className="card-item-header">
                     <span className="card-item-title">Card {index + 1}</span>
-                    <button
-                      type="button"
-                      className="btn-danger"
-                      onClick={() => removeCard(card.id)}
-                    >
-                      <Trash2 size={16} />
-                      Remove
-                    </button>
                   </div>
                   
                   <div className="form-grid">
-                    <div className="form-group">
-                      <label className="form-label">Icon (Emoji)</label>
-                      <input
-                        type="text"
-                        className="form-input"
-                        value={card.icon}
-                        onChange={(e) => updateCard(card.id, 'icon', e.target.value)}
-                        placeholder="e.g., 📱"
-                        maxLength={2}
-                      />
-                    </div>
-
-                    <div className="form-group">
-                      <label className="form-label">Icon Color</label>
-                      <div className="color-input-group">
-                        <input
-                          type="color"
-                          className="color-picker"
-                          value={card.iconColor}
-                          onChange={(e) => updateCard(card.id, 'iconColor', e.target.value)}
-                        />
-                        <input
-                          type="text"
-                          className="form-input"
-                          value={card.iconColor}
-                          onChange={(e) => updateCard(card.id, 'iconColor', e.target.value)}
-                        />
+                    <div className="form-group full-width">
+                      <label className="form-label">Card Image</label>
+                      <div className="image-upload-group">
+                        {card.image && (
+                          <img src={card.image} alt={`Card ${index + 1}`} className="preview-image" />
+                        )}
+                        <button
+                          type="button"
+                          className="btn-secondary"
+                          onClick={() => setActiveImagePicker(card.id)}
+                        >
+                          {card.image ? 'Change Image' : 'Select Image'}
+                        </button>
+                        {card.image && (
+                          <button
+                            type="button"
+                            className="btn-danger"
+                            onClick={() => updateCard(card.id, 'image', '')}
+                          >
+                            Remove
+                          </button>
+                        )}
                       </div>
                     </div>
 
                     <div className="form-group full-width">
-                      <label className="form-label">Card Title</label>
+                      <label className="form-label">Card Heading</label>
                       <input
                         type="text"
                         className="form-input"
-                        value={card.title}
-                        onChange={(e) => updateCard(card.id, 'title', e.target.value)}
-                        placeholder="Enter card title..."
+                        value={card.heading}
+                        onChange={(e) => updateCard(card.id, 'heading', e.target.value)}
+                        placeholder="Enter card heading..."
                       />
                     </div>
 
@@ -257,14 +253,14 @@ const WhyBecomeSection = () => {
               ))}
             </div>
 
-            <button
-              type="button"
-              className="btn-secondary add-item-btn"
-              onClick={addCard}
-            >
-              <Plus size={16} />
-              Add Feature Card
-            </button>
+            <ImageKitBrowser
+              isOpen={activeImagePicker !== null}
+              onSelect={(url) => {
+                updateCard(activeImagePicker, 'image', url);
+                setActiveImagePicker(null);
+              }}
+              onClose={() => setActiveImagePicker(null)}
+            />
           </div>
         )}
       </div>

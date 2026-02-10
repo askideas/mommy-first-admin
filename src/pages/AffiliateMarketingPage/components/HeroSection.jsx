@@ -2,12 +2,14 @@ import { useState, useEffect } from 'react';
 import { ChevronDown, ChevronUp } from 'lucide-react';
 import { doc, getDoc, setDoc } from 'firebase/firestore';
 import { db } from '../../../config/firebase';
+import ImageKitBrowser from '../../../components/ImageKitBrowser';
 import './AffiliateSection.css';
 
 const HeroSection = () => {
   const [expandedSection, setExpandedSection] = useState(null);
   const [loading, setLoading] = useState(false);
   const [saveStatus, setSaveStatus] = useState({ section: null, status: null });
+  const [showImagePicker, setShowImagePicker] = useState(false);
   
   const [isEnabled, setIsEnabled] = useState(true);
   const [savedIsEnabled, setSavedIsEnabled] = useState(true);
@@ -18,6 +20,7 @@ const HeroSection = () => {
     description: 'An exclusive circle of childbirth educators, perinatal specialists, labor-birth doulas, postpartum doulas, and lactation consultants co-elevating the 4th Trimester with Mommy First™.',
     buttonText: 'Become an Affiliate',
     buttonLink: '#apply',
+    image: '',
     backgroundColor: '#FFF5F8'
   });
   const [savedHeroData, setSavedHeroData] = useState(null);
@@ -206,7 +209,41 @@ const HeroSection = () => {
                   />
                 </div>
               </div>
+
+              <div className="form-group full-width">
+                <label className="form-label">Hero Image</label>
+                <div className="image-upload-group">
+                  {heroData.image && (
+                    <img src={heroData.image} alt="Hero" className="preview-image" />
+                  )}
+                  <button
+                    type="button"
+                    className="btn-secondary"
+                    onClick={() => setShowImagePicker(true)}
+                  >
+                    {heroData.image ? 'Change Image' : 'Select Image'}
+                  </button>
+                  {heroData.image && (
+                    <button
+                      type="button"
+                      className="btn-danger"
+                      onClick={() => setHeroData(prev => ({ ...prev, image: '' }))}
+                    >
+                      Remove
+                    </button>
+                  )}
+                </div>
+              </div>
             </div>
+
+            <ImageKitBrowser
+              isOpen={showImagePicker}
+              onSelect={(url) => {
+                setHeroData(prev => ({ ...prev, image: url }));
+                setShowImagePicker(false);
+              }}
+              onClose={() => setShowImagePicker(false)}
+            />
 
             <div className="section-actions">
               <button
