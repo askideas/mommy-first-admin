@@ -11,6 +11,10 @@ const HeroSection = () => {
   const [saveStatus, setSaveStatus] = useState({ status: null });
   const [isImageKitOpen, setIsImageKitOpen] = useState(false);
   const [currentImageField, setCurrentImageField] = useState(null);
+  
+  // Enable/Disable
+  const [isEnabled, setIsEnabled] = useState(true);
+  const [savedIsEnabled, setSavedIsEnabled] = useState(true);
 
   // Hero Content
   const [heroContent, setHeroContent] = useState({
@@ -62,6 +66,10 @@ const HeroSection = () => {
       if (docSnap.exists()) {
         const data = docSnap.data();
 
+        if (data.isEnabled !== undefined) {
+          setIsEnabled(data.isEnabled);
+          setSavedIsEnabled(data.isEnabled);
+        }
         if (data.heroContent) setHeroContent(data.heroContent);
         if (data.labelItems) setLabelItems(data.labelItems);
         if (data.bubbles) setBubbles(data.bubbles);
@@ -89,6 +97,7 @@ const HeroSection = () => {
 
       const docRef = doc(db, 'carehubpage', 'herosection');
       const dataToSave = {
+        isEnabled,
         heroContent,
         labelItems,
         bubbles,
@@ -97,6 +106,7 @@ const HeroSection = () => {
       };
 
       await setDoc(docRef, dataToSave, { merge: true });
+      setSavedIsEnabled(isEnabled);
       setSavedData(dataToSave);
       setSaveStatus({ status: 'success' });
       setTimeout(() => setSaveStatus({ status: null }), 3000);
@@ -115,6 +125,7 @@ const HeroSection = () => {
 
   const hasUnsavedChanges = () => {
     if (!savedData) return true;
+    if (isEnabled !== savedIsEnabled) return true;
     const currentData = { heroContent, labelItems, bubbles, buttons };
     return JSON.stringify(currentData) !== JSON.stringify({
       heroContent: savedData.heroContent,
@@ -156,6 +167,17 @@ const HeroSection = () => {
     <div className="carehub-section-container">
       <div className="section-header-row">
         <h2 className="section-main-title">Hero Section</h2>
+        <div className="enable-toggle">
+          <label className="toggle-label">
+            <input
+              type="checkbox"
+              className="toggle-checkbox"
+              checked={isEnabled}
+              onChange={(e) => setIsEnabled(e.target.checked)}
+            />
+            <span className="toggle-text">{isEnabled ? 'Enabled' : 'Disabled'}</span>
+          </label>
+        </div>
       </div>
 
       {/* Hero Content */}
