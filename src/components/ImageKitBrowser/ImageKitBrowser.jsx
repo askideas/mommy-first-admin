@@ -138,10 +138,23 @@ const ImageKitBrowser = ({ isOpen, onClose, onSelect }) => {
           const uploadedImage = await response.json();
           console.log('Image uploaded successfully:', uploadedImage);
           
-          // Refresh the image list
-          await fetchImages();
-          setCurrentPage(1);
-          setError(null);
+            // Add uploaded image to local images state instantly
+            setImages(prev => [
+              {
+                fileId: uploadedImage.fileId,
+                url: uploadedImage.url,
+                name: uploadedImage.name,
+                filePath: uploadedImage.filePath,
+                createdAt: uploadedImage.createdAt,
+                type: 'file',
+                fileType: 'image',
+              },
+              ...prev
+            ]);
+            setCurrentPage(1);
+            setError(null);
+            // Optionally refresh from server after a short delay
+            setTimeout(() => fetchImages(), 1500);
           
         } catch (err) {
           console.error('Error uploading image:', err);

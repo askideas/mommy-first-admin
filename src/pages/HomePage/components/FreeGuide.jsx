@@ -1,13 +1,17 @@
 import { useState, useEffect } from 'react';
-import { ChevronDown, ChevronUp } from 'lucide-react';
+import { ChevronDown, ChevronUp, Image } from 'lucide-react';
 import { doc, getDoc, setDoc } from 'firebase/firestore';
 import { db } from '../../../config/firebase';
+import ImageKitBrowser from '../../../components/ImageKitBrowser';
 import './FreeGuide.css';
 
 const FreeGuide = () => {
   const [expandedSection, setExpandedSection] = useState(null);
   const [loading, setLoading] = useState(false);
   const [saveStatus, setSaveStatus] = useState({ section: null, status: null });
+  
+  // ImageKit Browser Modal State
+  const [isImageKitOpen, setIsImageKitOpen] = useState(false);
   
   // Enable/Disable State
   const [isEnabled, setIsEnabled] = useState(true);
@@ -27,7 +31,8 @@ const FreeGuide = () => {
     description: '',
     buttonLabel: '',
     flashLabelText: '',
-    url: ''
+    url: '',
+    backgroundImage: ''
   });
   const [savedGuideData, setSavedGuideData] = useState(null);
 
@@ -178,9 +183,24 @@ const FreeGuide = () => {
         description: '',
         buttonLabel: '',
         flashLabelText: '',
-        url: ''
+        url: '',
+        backgroundImage: ''
       });
     }
+  };
+
+  // ImageKit Browser Handlers
+  const openImageKitBrowser = () => {
+    setIsImageKitOpen(true);
+  };
+
+  const handleImageKitSelect = (imageUrl) => {
+    console.log('FreeGuide - Background Image selected:', imageUrl);
+    setGuideData(prev => ({ ...prev, backgroundImage: imageUrl }));
+  };
+
+  const removeBackgroundImage = () => {
+    setGuideData(prev => ({ ...prev, backgroundImage: '' }));
   };
 
   return (
@@ -329,6 +349,44 @@ const FreeGuide = () => {
           </div>
 
           <div className="form-group">
+            <label className="form-label">Background Image</label>
+            <div className="image-upload-area">
+              {guideData.backgroundImage ? (
+                <div className="image-selected-container">
+                  <div className="image-preview">
+                    <img src={guideData.backgroundImage} alt="Background preview" />
+                  </div>
+                  <div className="image-actions">
+                    <button 
+                      type="button"
+                      className="btn-change"
+                      onClick={openImageKitBrowser}
+                    >
+                      Change
+                    </button>
+                    <button 
+                      type="button"
+                      className="btn-remove"
+                      onClick={removeBackgroundImage}
+                    >
+                      Remove
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <button 
+                  type="button"
+                  className="choose-image-btn"
+                  onClick={openImageKitBrowser}
+                >
+                  <Image size={24} />
+                  <span>Choose Background Image</span>
+                </button>
+              )}
+            </div>
+          </div>
+
+          <div className="form-group">
             <label className="form-label">Redirection URL</label>
             <input
               type="url"
@@ -354,6 +412,13 @@ const FreeGuide = () => {
           </div>
         )}
       </div>
+
+      {/* ImageKit Browser Modal */}
+      <ImageKitBrowser
+        isOpen={isImageKitOpen}
+        onClose={() => setIsImageKitOpen(false)}
+        onSelect={handleImageKitSelect}
+      />
     </div>
   );
 };
