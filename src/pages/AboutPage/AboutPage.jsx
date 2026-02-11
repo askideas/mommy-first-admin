@@ -1,20 +1,22 @@
 import { useState } from 'react';
 import './AboutPage.css';
 import HeroSection from './components/HeroSection';
-import HeadingPrepSection from './components/HeadingPrepSection';
+import TextSection from './components/TextSection';
+import CardSection from './components/CardSection';
 import TestimonialsSection from './components/TestimonialsSection';
 import InfrastructureSection from './components/InfrastructureSection';
-import MissionSection from './components/MissionSection';
+import WhatDriveUsSection from './components/WhatDriveUsSection';
 
 const AboutPage = () => {
   const [selectedSection, setSelectedSection] = useState('hero');
 
   const sections = [
     { id: 'hero', name: 'Hero Section' },
-    { id: 'heading-prep', name: 'Heading Prep Section' },
+    { id: 'text', name: 'Text Section' },
+    { id: 'card', name: 'Card Section' },
     { id: 'testimonials', name: 'Testimonials Section' },
-    { id: 'infrastructure', name: '4th Trimester Infrastructure' },
-    { id: 'mission', name: 'Mission Section' }
+    { id: 'infrastructure', name: 'Infrastructure Section' },
+    { id: 'whatdriveus', name: 'What Drive Us Section' }
   ];
 
   const renderSectionContent = () => {
@@ -23,14 +25,16 @@ const AboutPage = () => {
     switch (selectedSection) {
       case 'hero':
         return <HeroSection />;
-      case 'heading-prep':
-        return <HeadingPrepSection />;
+      case 'text':
+        return <TextSection />;
+      case 'card':
+        return <CardSection />;
       case 'testimonials':
         return <TestimonialsSection />;
       case 'infrastructure':
         return <InfrastructureSection />;
-      case 'mission':
-        return <MissionSection />;
+      case 'whatdriveus':
+        return <WhatDriveUsSection />;
       default:
         return (
           <div className="section-content-empty">

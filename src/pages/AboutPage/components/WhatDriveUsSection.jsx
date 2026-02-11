@@ -3,7 +3,7 @@ import { doc, getDoc, setDoc } from 'firebase/firestore';
 import { db } from '../../../config/firebase';
 import './AboutSection.css';
 
-const HeroSection = () => {
+const WhatDriveUsSection = () => {
   const [loading, setLoading] = useState(false);
   const [saveStatus, setSaveStatus] = useState(null);
   
@@ -11,13 +11,13 @@ const HeroSection = () => {
   const [isEnabled, setIsEnabled] = useState(true);
   const [savedIsEnabled, setSavedIsEnabled] = useState(true);
   
-  const [heroData, setHeroData] = useState({
-    title: '',
-    heading1: '',
-    heading2: '',
+  const [sectionData, setSectionData] = useState({
+    heading: '',
+    label1: '',
+    label2: '',
     description: ''
   });
-  const [savedHeroData, setSavedHeroData] = useState(null);
+  const [savedSectionData, setSavedSectionData] = useState(null);
 
   useEffect(() => {
     if (db) {
@@ -33,7 +33,7 @@ const HeroSection = () => {
     
     try {
       setLoading(true);
-      const docRef = doc(db, 'aboutpage', 'herosection');
+      const docRef = doc(db, 'aboutpage', 'whatdriveus');
       const docSnap = await getDoc(docRef);
       
       if (docSnap.exists()) {
@@ -42,9 +42,9 @@ const HeroSection = () => {
           setIsEnabled(data.isEnabled);
           setSavedIsEnabled(data.isEnabled);
         }
-        if (data.heroData) {
-          setHeroData(data.heroData);
-          setSavedHeroData(data.heroData);
+        if (data.sectionData) {
+          setSectionData(data.sectionData);
+          setSavedSectionData(data.sectionData);
         }
       }
     } catch (error) {
@@ -55,7 +55,7 @@ const HeroSection = () => {
   };
 
   const handleInputChange = (field, value) => {
-    setHeroData(prev => ({ ...prev, [field]: value }));
+    setSectionData(prev => ({ ...prev, [field]: value }));
   };
 
   const handleSave = async () => {
@@ -63,19 +63,19 @@ const HeroSection = () => {
       setLoading(true);
       setSaveStatus('saving');
       
-      const docRef = doc(db, 'aboutpage', 'herosection');
+      const docRef = doc(db, 'aboutpage', 'whatdriveus');
       
       await setDoc(docRef, {
         isEnabled: isEnabled,
-        heroData: heroData
+        sectionData: sectionData
       });
       
       setSavedIsEnabled(isEnabled);
-      setSavedHeroData({ ...heroData });
+      setSavedSectionData({ ...sectionData });
       setSaveStatus('success');
       setTimeout(() => setSaveStatus(null), 2000);
     } catch (error) {
-      console.error('Error saving hero data:', error);
+      console.error('Error saving what drive us section:', error);
       setSaveStatus('error');
       setTimeout(() => setSaveStatus(null), 2000);
     } finally {
@@ -85,13 +85,13 @@ const HeroSection = () => {
 
   const handleCancel = () => {
     setIsEnabled(savedIsEnabled);
-    if (savedHeroData) {
-      setHeroData({ ...savedHeroData });
+    if (savedSectionData) {
+      setSectionData({ ...savedSectionData });
     } else {
-      setHeroData({
-        title: '',
-        heading1: '',
-        heading2: '',
+      setSectionData({
+        heading: '',
+        label1: '',
+        label2: '',
         description: ''
       });
     }
@@ -100,7 +100,7 @@ const HeroSection = () => {
   return (
     <div className="about-section-container">
       <div className="section-header-row">
-        <h2 className="section-main-title">Hero Section Configuration</h2>
+        <h2 className="section-main-title">What Drive Us Section Configuration</h2>
         <div className="enable-toggle">
           <label className="toggle-label">
             <input
@@ -116,39 +116,39 @@ const HeroSection = () => {
 
       <div className="config-section">
         <div className="section-content-area">
-          {/* Title */}
+          {/* Heading */}
           <div className="form-group">
-            <label className="form-label">Title</label>
+            <label className="form-label">Heading</label>
             <input
               type="text"
               className="form-input"
-              placeholder="Enter title"
-              value={heroData.title}
-              onChange={(e) => handleInputChange('title', e.target.value)}
+              placeholder="Enter heading"
+              value={sectionData.heading}
+              onChange={(e) => handleInputChange('heading', e.target.value)}
             />
           </div>
 
-          {/* Heading 1 */}
+          {/* Label 1 */}
           <div className="form-group">
-            <label className="form-label">Heading 1</label>
+            <label className="form-label">Label 1</label>
             <input
               type="text"
               className="form-input"
-              placeholder="Enter heading 1"
-              value={heroData.heading1}
-              onChange={(e) => handleInputChange('heading1', e.target.value)}
+              placeholder="Enter label 1"
+              value={sectionData.label1}
+              onChange={(e) => handleInputChange('label1', e.target.value)}
             />
           </div>
 
-          {/* Heading 2 */}
+          {/* Label 2 */}
           <div className="form-group">
-            <label className="form-label">Heading 2</label>
+            <label className="form-label">Label 2</label>
             <input
               type="text"
               className="form-input"
-              placeholder="Enter heading 2"
-              value={heroData.heading2}
-              onChange={(e) => handleInputChange('heading2', e.target.value)}
+              placeholder="Enter label 2"
+              value={sectionData.label2}
+              onChange={(e) => handleInputChange('label2', e.target.value)}
             />
           </div>
 
@@ -159,7 +159,7 @@ const HeroSection = () => {
               className="form-textarea"
               placeholder="Enter description"
               rows={4}
-              value={heroData.description}
+              value={sectionData.description}
               onChange={(e) => handleInputChange('description', e.target.value)}
             />
           </div>
@@ -182,4 +182,4 @@ const HeroSection = () => {
   );
 };
 
-export default HeroSection;
+export default WhatDriveUsSection;

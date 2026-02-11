@@ -1,39 +1,23 @@
 import { useState, useEffect } from 'react';
-import { ChevronDown, ChevronUp, Image, Plus, Trash2 } from 'lucide-react';
+import { Image } from 'lucide-react';
 import { doc, getDoc, setDoc } from 'firebase/firestore';
 import { db } from '../../../config/firebase';
 import ImageKitBrowser from '../../../components/ImageKitBrowser';
-import './TestimonialsSection.css';
+import './AboutSection.css';
 
 const TestimonialsSection = () => {
-  const [expandedSection, setExpandedSection] = useState(null);
   const [loading, setLoading] = useState(false);
-  const [saveStatus, setSaveStatus] = useState({ section: null, status: null });
-  
-  // ImageKit Browser Modal State
+  const [saveStatus, setSaveStatus] = useState(null);
   const [isImageKitOpen, setIsImageKitOpen] = useState(false);
-  const [imageKitTarget, setImageKitTarget] = useState(null); // { type: 'testimonial', index: 0 }
+  const [imageKitTarget, setImageKitTarget] = useState(null);
   
   // Enable/Disable State
   const [isEnabled, setIsEnabled] = useState(true);
   const [savedIsEnabled, setSavedIsEnabled] = useState(true);
   
-  // Testimonials Data State
   const [testimonials, setTestimonials] = useState([
-    {
-      id: 1,
-      authorImage: null,
-      authorName: 'Dr. Vandana Pasumalli Sachin',
-      authorCredentials: 'MD, MBBS, FRACP, Fellowship in Lactation',
-      content: 'Lorem ipsum dolor sit amet consectetur. Ac scelerisque adipiscing ullamcorper sit rhoncus. Eu semper placerat tristique sed ut. Eget arcu id lacus nec porttitor gravida aliquam blandit tincidunt.'
-    },
-    {
-      id: 2,
-      authorImage: null,
-      authorName: 'Dr. Riteshvarini Lal',
-      authorCredentials: 'MD, MBBS, Fellowship in Neonatal Care',
-      content: 'Lorem ipsum dolor sit amet consectetur. Ac scelerisque adipiscing ullamcorper sit rhoncus. Eu semper placerat tristique sed ut. Eget arcu id lacus nec porttitor gravida aliquam blandit tincidunt.'
-    }
+    { image: null, label: '', name: '', description: '' },
+    { image: null, label: '', name: '', description: '' }
   ]);
   const [savedTestimonials, setSavedTestimonials] = useState(null);
 
@@ -56,12 +40,10 @@ const TestimonialsSection = () => {
       
       if (docSnap.exists()) {
         const data = docSnap.data();
-        
         if (data.isEnabled !== undefined) {
           setIsEnabled(data.isEnabled);
           setSavedIsEnabled(data.isEnabled);
         }
-        
         if (data.testimonials) {
           setTestimonials(data.testimonials);
           setSavedTestimonials(data.testimonials);
@@ -74,91 +56,70 @@ const TestimonialsSection = () => {
     }
   };
 
-  const saveToFirebase = async () => {
-    if (!db) {
-      console.error('Firebase not initialized');
-      setSaveStatus({ section: 'testimonials', status: 'error' });
-      setTimeout(() => setSaveStatus({ section: null, status: null }), 3000);
-      return;
-    }
-
-    try {
-      setLoading(true);
-      setSaveStatus({ section: 'testimonials', status: 'saving' });
-      
-      const docRef = doc(db, 'aboutpage', 'testimonials');
-      
-      const dataToSave = {
-        isEnabled,
-        testimonials,
-        updatedAt: new Date().toISOString()
-      };
-      
-      await setDoc(docRef, dataToSave, { merge: true });
-      
-      setSavedIsEnabled(isEnabled);
-      setSavedTestimonials([...testimonials]);
-      
-      setSaveStatus({ section: 'testimonials', status: 'success' });
-      setTimeout(() => setSaveStatus({ section: null, status: null }), 3000);
-    } catch (error) {
-      console.error('Error saving to Firebase:', error);
-      setSaveStatus({ section: 'testimonials', status: 'error' });
-      setTimeout(() => setSaveStatus({ section: null, status: null }), 3000);
-    } finally {
-      setLoading(false);
-    }
+  const handleCardChange = (index, field, value) => {
+    setTestimonials(prev => {
+      const newTestimonials = [...prev];
+      newTestimonials[index] = { ...newTestimonials[index], [field]: value };
+      return newTestimonials;
+    });
   };
 
-  const toggleSection = (section) => {
-    setExpandedSection(expandedSection === section ? null : section);
+  const openImageKitBrowser = (index) => {
+    setImageKitTarget(index);
+    setIsImageKitOpen(true);
   };
 
-  const handleImageSelect = (imageUrl) => {
-    if (imageKitTarget && imageKitTarget.type === 'testimonial') {
-      const updatedTestimonials = [...testimonials];
-      updatedTestimonials[imageKitTarget.index].authorImage = imageUrl;
-      setTestimonials(updatedTestimonials);
+  const handleImageKitSelect = (imageUrl) => {
+    if (imageKitTarget !== null) {
+      handleCardChange(imageKitTarget, 'image', imageUrl);
     }
     setIsImageKitOpen(false);
     setImageKitTarget(null);
   };
 
-  const openImageKitBrowser = (type, index) => {
-    setImageKitTarget({ type, index });
-    setIsImageKitOpen(true);
+  const removeImage = (index) => {
+    handleCardChange(index, 'image', null);
   };
 
-  const addTestimonial = () => {
-    const newTestimonial = {
-      id: Date.now(),
-      authorImage: null,
-      authorName: '',
-      authorCredentials: '',
-      content: ''
-    };
-    setTestimonials([...testimonials, newTestimonial]);
-    setExpandedSection(`testimonial-${testimonials.length}`);
+  const handleSave = async () => {
+    try {
+      setLoading(true);
+      setSaveStatus('saving');
+      
+      const docRef = doc(db, 'aboutpage', 'testimonials');
+      
+      await setDoc(docRef, {
+        isEnabled: isEnabled,
+        testimonials: testimonials
+      });
+      
+      setSavedIsEnabled(isEnabled);
+      setSavedTestimonials([...testimonials]);
+      setSaveStatus('success');
+      setTimeout(() => setSaveStatus(null), 2000);
+    } catch (error) {
+      console.error('Error saving testimonials:', error);
+      setSaveStatus('error');
+      setTimeout(() => setSaveStatus(null), 2000);
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const removeTestimonial = (index) => {
-    const updatedTestimonials = testimonials.filter((_, i) => i !== index);
-    setTestimonials(updatedTestimonials);
-  };
-
-  const updateTestimonial = (index, field, value) => {
-    const updatedTestimonials = [...testimonials];
-    updatedTestimonials[index][field] = value;
-    setTestimonials(updatedTestimonials);
-  };
-
-  const hasUnsavedChanges = () => {
-    return isEnabled !== savedIsEnabled || 
-           JSON.stringify(testimonials) !== JSON.stringify(savedTestimonials);
+  const handleCancel = () => {
+    setIsEnabled(savedIsEnabled);
+    if (savedTestimonials) {
+      setTestimonials([...savedTestimonials]);
+    } else {
+      setTestimonials([
+        { image: null, label: '', name: '', description: '' },
+        { image: null, label: '', name: '', description: '' }
+      ]);
+    }
   };
 
   return (
-    <div className="testimonials-section-container">
+    <div className="about-section-container">
       <div className="section-header-row">
         <h2 className="section-main-title">Testimonials Section Configuration</h2>
         <div className="enable-toggle">
@@ -174,135 +135,112 @@ const TestimonialsSection = () => {
         </div>
       </div>
 
-      {/* Testimonial Cards */}
-      {testimonials.map((testimonial, index) => (
-        <div key={testimonial.id} className="config-section">
-          <button
-            className="section-header"
-            onClick={() => toggleSection(`testimonial-${index}`)}
-          >
-            <div className="section-header-title">
-              Testimonial {index + 1} {testimonial.authorName && `- ${testimonial.authorName}`}
-            </div>
-            <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-              {testimonials.length > 1 && (
-                <button
-                  className="icon-btn-danger"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    removeTestimonial(index);
-                  }}
-                  title="Remove Testimonial"
-                >
-                  <Trash2 size={16} />
-                </button>
-              )}
-              {expandedSection === `testimonial-${index}` ? <ChevronUp size={20} /> : <ChevronDown size={20} />}
-            </div>
-          </button>
-
-          {expandedSection === `testimonial-${index}` && (
-            <div className="section-content">
-              <div className="form-grid">
-                <div className="form-group full-width">
-                  <label className="form-label">Author Image</label>
-                  <div className="image-upload-group">
-                    {testimonial.authorImage && (
-                      <div className="image-preview round">
-                        <img src={testimonial.authorImage} alt={testimonial.authorName} />
+      <div className="config-section">
+        <div className="section-content-area">
+          <div className="form-group">
+            <label className="form-label">Testimonial Cards (2 Cards)</label>
+            <div className="cards-grid cards-grid-2">
+              {testimonials.map((card, index) => (
+                <div key={index} className="card-item">
+                  <h4 className="card-item-title">Card {index + 1}</h4>
+                  
+                  {/* Card Image */}
+                  <div className="card-image-area">
+                    {card.image ? (
+                      <div className="card-image-preview">
+                        <img src={card.image} alt={`Testimonial ${index + 1}`} />
+                        <div className="card-image-actions">
+                          <button 
+                            type="button"
+                            className="btn-change-small"
+                            onClick={() => openImageKitBrowser(index)}
+                          >
+                            Change
+                          </button>
+                          <button 
+                            type="button"
+                            className="btn-remove-small"
+                            onClick={() => removeImage(index)}
+                          >
+                            Remove
+                          </button>
+                        </div>
                       </div>
-                    )}
-                    <button
-                      type="button"
-                      className="btn-secondary"
-                      onClick={() => openImageKitBrowser('testimonial', index)}
-                    >
-                      <Image size={16} />
-                      {testimonial.authorImage ? 'Change Image' : 'Select Image'}
-                    </button>
-                    {testimonial.authorImage && (
-                      <button
+                    ) : (
+                      <button 
                         type="button"
-                        className="btn-text"
-                        onClick={() => updateTestimonial(index, 'authorImage', null)}
+                        className="choose-image-btn-small"
+                        onClick={() => openImageKitBrowser(index)}
                       >
-                        Remove Image
+                        <Image size={18} />
+                        <span>Choose Image</span>
                       </button>
                     )}
                   </div>
-                </div>
 
-                <div className="form-group">
-                  <label className="form-label">Author Name</label>
-                  <input
-                    type="text"
-                    className="form-input"
-                    value={testimonial.authorName}
-                    onChange={(e) => updateTestimonial(index, 'authorName', e.target.value)}
-                    placeholder="e.g., Dr. Vandana Pasumalli Sachin"
-                  />
-                </div>
+                  {/* Label */}
+                  <div className="card-input-group">
+                    <label className="card-input-label">Label</label>
+                    <input
+                      type="text"
+                      className="form-input"
+                      placeholder="Enter label"
+                      value={card.label}
+                      onChange={(e) => handleCardChange(index, 'label', e.target.value)}
+                    />
+                  </div>
 
-                <div className="form-group">
-                  <label className="form-label">Author Credentials</label>
-                  <input
-                    type="text"
-                    className="form-input"
-                    value={testimonial.authorCredentials}
-                    onChange={(e) => updateTestimonial(index, 'authorCredentials', e.target.value)}
-                    placeholder="e.g., MD, MBBS, FRACP"
-                  />
-                </div>
+                  {/* Name */}
+                  <div className="card-input-group">
+                    <label className="card-input-label">Name</label>
+                    <input
+                      type="text"
+                      className="form-input"
+                      placeholder="Enter name"
+                      value={card.name}
+                      onChange={(e) => handleCardChange(index, 'name', e.target.value)}
+                    />
+                  </div>
 
-                <div className="form-group full-width">
-                  <label className="form-label">Testimonial Content</label>
-                  <textarea
-                    className="form-textarea"
-                    rows={5}
-                    value={testimonial.content}
-                    onChange={(e) => updateTestimonial(index, 'content', e.target.value)}
-                    placeholder="Enter testimonial content..."
-                  />
+                  {/* Description */}
+                  <div className="card-input-group">
+                    <label className="card-input-label">Description</label>
+                    <textarea
+                      className="form-textarea-small"
+                      placeholder="Enter description"
+                      rows={3}
+                      value={card.description}
+                      onChange={(e) => handleCardChange(index, 'description', e.target.value)}
+                    />
+                  </div>
                 </div>
-              </div>
+              ))}
             </div>
-          )}
+          </div>
+
+          <div className="section-actions">
+            <button className="btn-cancel" onClick={handleCancel} disabled={loading}>Cancel</button>
+            <button className="btn-save" onClick={handleSave} disabled={loading}>
+              {loading && saveStatus === 'saving' ? 'Saving...' : 'Save'}
+            </button>
+            {saveStatus === 'success' && (
+              <span className="save-success">✓ Saved successfully!</span>
+            )}
+            {saveStatus === 'error' && (
+              <span className="save-error">✗ Error saving</span>
+            )}
+          </div>
         </div>
-      ))}
-
-      {/* Add Testimonial Button */}
-      <button className="btn-add-section" onClick={addTestimonial}>
-        <Plus size={20} />
-        Add Testimonial
-      </button>
-
-      {/* Save Section */}
-      <div className="save-section">
-        <button
-          className="btn-primary"
-          onClick={saveToFirebase}
-          disabled={loading || !hasUnsavedChanges()}
-        >
-          {saveStatus.section === 'testimonials' && saveStatus.status === 'saving'
-            ? 'Saving...'
-            : 'Save Testimonials Section'}
-        </button>
-        {saveStatus.section === 'testimonials' && saveStatus.status === 'success' && (
-          <span className="save-status success">Saved successfully!</span>
-        )}
-        {saveStatus.section === 'testimonials' && saveStatus.status === 'error' && (
-          <span className="save-status error">Error saving data</span>
-        )}
       </div>
 
       {/* ImageKit Browser Modal */}
       <ImageKitBrowser
         isOpen={isImageKitOpen}
-        onSelect={handleImageSelect}
         onClose={() => {
           setIsImageKitOpen(false);
           setImageKitTarget(null);
         }}
+        onSelect={handleImageKitSelect}
       />
     </div>
   );

@@ -3,7 +3,7 @@ import { doc, getDoc, setDoc } from 'firebase/firestore';
 import { db } from '../../../config/firebase';
 import './AboutSection.css';
 
-const HeroSection = () => {
+const TextSection = () => {
   const [loading, setLoading] = useState(false);
   const [saveStatus, setSaveStatus] = useState(null);
   
@@ -11,13 +11,8 @@ const HeroSection = () => {
   const [isEnabled, setIsEnabled] = useState(true);
   const [savedIsEnabled, setSavedIsEnabled] = useState(true);
   
-  const [heroData, setHeroData] = useState({
-    title: '',
-    heading1: '',
-    heading2: '',
-    description: ''
-  });
-  const [savedHeroData, setSavedHeroData] = useState(null);
+  const [textContent, setTextContent] = useState('');
+  const [savedTextContent, setSavedTextContent] = useState('');
 
   useEffect(() => {
     if (db) {
@@ -33,7 +28,7 @@ const HeroSection = () => {
     
     try {
       setLoading(true);
-      const docRef = doc(db, 'aboutpage', 'herosection');
+      const docRef = doc(db, 'aboutpage', 'textsection');
       const docSnap = await getDoc(docRef);
       
       if (docSnap.exists()) {
@@ -42,9 +37,9 @@ const HeroSection = () => {
           setIsEnabled(data.isEnabled);
           setSavedIsEnabled(data.isEnabled);
         }
-        if (data.heroData) {
-          setHeroData(data.heroData);
-          setSavedHeroData(data.heroData);
+        if (data.textContent !== undefined) {
+          setTextContent(data.textContent);
+          setSavedTextContent(data.textContent);
         }
       }
     } catch (error) {
@@ -54,28 +49,24 @@ const HeroSection = () => {
     }
   };
 
-  const handleInputChange = (field, value) => {
-    setHeroData(prev => ({ ...prev, [field]: value }));
-  };
-
   const handleSave = async () => {
     try {
       setLoading(true);
       setSaveStatus('saving');
       
-      const docRef = doc(db, 'aboutpage', 'herosection');
+      const docRef = doc(db, 'aboutpage', 'textsection');
       
       await setDoc(docRef, {
         isEnabled: isEnabled,
-        heroData: heroData
+        textContent: textContent
       });
       
       setSavedIsEnabled(isEnabled);
-      setSavedHeroData({ ...heroData });
+      setSavedTextContent(textContent);
       setSaveStatus('success');
       setTimeout(() => setSaveStatus(null), 2000);
     } catch (error) {
-      console.error('Error saving hero data:', error);
+      console.error('Error saving text section:', error);
       setSaveStatus('error');
       setTimeout(() => setSaveStatus(null), 2000);
     } finally {
@@ -85,22 +76,13 @@ const HeroSection = () => {
 
   const handleCancel = () => {
     setIsEnabled(savedIsEnabled);
-    if (savedHeroData) {
-      setHeroData({ ...savedHeroData });
-    } else {
-      setHeroData({
-        title: '',
-        heading1: '',
-        heading2: '',
-        description: ''
-      });
-    }
+    setTextContent(savedTextContent);
   };
 
   return (
     <div className="about-section-container">
       <div className="section-header-row">
-        <h2 className="section-main-title">Hero Section Configuration</h2>
+        <h2 className="section-main-title">Text Section Configuration</h2>
         <div className="enable-toggle">
           <label className="toggle-label">
             <input
@@ -116,51 +98,15 @@ const HeroSection = () => {
 
       <div className="config-section">
         <div className="section-content-area">
-          {/* Title */}
+          {/* Text Content */}
           <div className="form-group">
-            <label className="form-label">Title</label>
-            <input
-              type="text"
-              className="form-input"
-              placeholder="Enter title"
-              value={heroData.title}
-              onChange={(e) => handleInputChange('title', e.target.value)}
-            />
-          </div>
-
-          {/* Heading 1 */}
-          <div className="form-group">
-            <label className="form-label">Heading 1</label>
-            <input
-              type="text"
-              className="form-input"
-              placeholder="Enter heading 1"
-              value={heroData.heading1}
-              onChange={(e) => handleInputChange('heading1', e.target.value)}
-            />
-          </div>
-
-          {/* Heading 2 */}
-          <div className="form-group">
-            <label className="form-label">Heading 2</label>
-            <input
-              type="text"
-              className="form-input"
-              placeholder="Enter heading 2"
-              value={heroData.heading2}
-              onChange={(e) => handleInputChange('heading2', e.target.value)}
-            />
-          </div>
-
-          {/* Description */}
-          <div className="form-group">
-            <label className="form-label">Description</label>
+            <label className="form-label">Text Content</label>
             <textarea
-              className="form-textarea"
-              placeholder="Enter description"
-              rows={4}
-              value={heroData.description}
-              onChange={(e) => handleInputChange('description', e.target.value)}
+              className="form-textarea large"
+              placeholder="Enter your text content here..."
+              rows={10}
+              value={textContent}
+              onChange={(e) => setTextContent(e.target.value)}
             />
           </div>
 
@@ -182,4 +128,4 @@ const HeroSection = () => {
   );
 };
 
-export default HeroSection;
+export default TextSection;
