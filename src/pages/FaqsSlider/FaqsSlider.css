@@ -59,10 +59,10 @@
   transition: all 0.2s;
 }
 
-.btn-add-item:hover {
+/* .btn-add-item:hover {
   transform: translateY(-1px);
   box-shadow: 0 2px 8px rgba(220, 95, 146, 0.2);
-}
+} */
 
 /* FAQ Form */
 .faq-form {

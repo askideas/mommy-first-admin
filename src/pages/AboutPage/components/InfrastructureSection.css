@@ -48,10 +48,10 @@
   margin-top: 16px;
 }
 
-.btn-add-item:hover {
+/* .btn-add-item:hover {
   border-color: #DC5F92;
   background: rgba(220, 95, 146, 0.05);
-}
+} */
 
 /* Icon Button Danger */
 .icon-btn-danger {
