@@ -1,0 +1,115 @@
+/* Bundle Page Layout */
+.bundlepage-page {
+  width: 100%;
+}
+
+.page-header {
+  margin-bottom: 16px;
+}
+
+.page-title {
+  font-size: 20px;
+  font-weight: 700;
+  letter-spacing: -0.4px;
+  color: #1a1a1a;
+  margin: 0;
+}
+
+.page-subtitle {
+  font-size: 11px;
+  color: #666;
+  margin: 3px 0 0 0;
+  letter-spacing: -0.1px;
+}
+
+/* Two Column Layout */
+.bundlepage-layout {
+  display: grid;
+  grid-template-columns: 220px 1fr;
+  gap: 16px;
+  min-height: calc(100vh - 130px);
+}
+
+/* Left Sidebar - Sections List */
+.sections-sidebar {
+  background: white;
+  border: 1px solid #e0e0e0;
+  border-radius: 6px;
+  padding: 14px;
+  height: fit-content;
+  position: sticky;
+  top: 16px;
+}
+
+.sidebar-title {
+  font-size: 11px;
+  font-weight: 700;
+  color: #1a1a1a;
+  margin: 0 0 12px 0;
+  letter-spacing: 0.3px;
+  text-transform: uppercase;
+}
+
+.sections-list {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.section-item {
+  background: transparent;
+  border: none;
+  padding: 8px 12px;
+  font-size: 12px;
+  font-weight: 500;
+  color: #666;
+  cursor: pointer;
+  transition: all 0.2s;
+  border-radius: 5px;
+  text-align: left;
+  letter-spacing: -0.1px;
+  border: 1px solid transparent;
+}
+
+.section-item:hover {
+  background: rgba(220, 95, 146, 0.05);
+  color: #DC5F92;
+  border-color: rgba(220, 95, 146, 0.2);
+}
+
+.section-item.active {
+  background: linear-gradient(218.44deg, #FD8CBB 4.36%, #DC5F92 86.2%);
+  color: white;
+  font-weight: 600;
+  border-color: transparent;
+}
+
+/* Right Content Area */
+.section-content {
+  background: white;
+  border: 1px solid #e0e0e0;
+  border-radius: 6px;
+  padding: 18px;
+  min-height: 400px;
+}
+
+.section-content-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 300px;
+  color: #666;
+}
+
+.section-content-empty h2 {
+  font-size: 18px;
+  font-weight: 600;
+  margin: 0 0 8px 0;
+  color: #333;
+}
+
+.section-content-empty p {
+  font-size: 13px;
+  margin: 0;
+}

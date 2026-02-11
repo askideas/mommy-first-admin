@@ -12,6 +12,7 @@ import AffiliateMarketingPage from './pages/AffiliateMarketingPage/AffiliateMark
 import DonationPage from './pages/DonationPage/DonationPage';
 import Media from './pages/Media/Media';
 import ShopPage from './pages/ShopPage/ShopPage';
+import BundlePage from './pages/BundlePage/BundlePage';
 import ReviewsSlider from './pages/ReviewsSlider/ReviewsSlider';
 import FaqsSlider from './pages/FaqsSlider/FaqsSlider';
 import EventsPage from './pages/Events/EventsPage';
@@ -43,6 +44,7 @@ function App() {
             <Route path="donation" element={<DonationPage />} />
             <Route path="media" element={<Media />} />
             <Route path="shop" element={<ShopPage />} />
+            <Route path="bundle" element={<BundlePage />} />
             <Route path="reviews" element={<ReviewsSlider />} />
             <Route path="faqs" element={<FaqsSlider />} />
             <Route path="livesessions" element={<EventsPage />} />
